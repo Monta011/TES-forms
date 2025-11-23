@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Leave Application – Omani</title>
+
+  <style>
+    /* =========================
+       PAGE / GLOBAL
+    ========================== */
+    @page { size: A4; margin: 0.1in 0.22in 0in 0.21in; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-size: 11pt;
+      color: #000;
+      position: relative;
+    }
+
+    .tnr { font-family: "Times New Roman", serif; }
+    .calibri { font-family: Calibri, Carlito, Arial, sans-serif; }
+
+    /* =========================
+       WATERMARK
+    ========================== */
+    .watermark {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.08; /* faint like Word */
+    }
+    .watermark img{
+      width: 87.5mm;  /* reduced by 50% */
+      height: auto;
+    }
+
+    /* Everything else sits above watermark */
+    .page {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* =========================
+       HEADER
+    ========================== */
+    .header {
+      display: flex;
+      align-items: start;
+      margin-top: 2mm;
+      margin-left: 3mm; /* slight shift from left edge */
+    }
+
+    .logo {
+      width: 0.86in;   /* matches specified width */
+      height: 1.37in;  /* matches specified height */
+      margin-right: 6mm;
+    }
+
+    .header-center {
+      text-align: center;
+      line-height: 1.05;
+      margin-left: 30mm; /* shift text content right */
+      margin-top: 8mm; /* add top spacing */
+    }
+
+    .header-ar {
+      font-size: 28pt;
+      font-weight: bold;
+      margin-bottom: 1mm;
+    }
+
+    .header-en {
+      font-size: 20pt;
+      font-weight: bold;
+      text-decoration: underline;
+      margin-bottom: 0.8mm;
+      white-space: nowrap; /* prevent line break */
+    }
+
+    .header-sub {
+      font-size: 11pt;
+      text-decoration: underline;
+      margin-bottom: 2mm;
+      text-align: right; /* align to the right */
+    }
+
+    .form-title {
+      text-align: center;
+      font-family: Calibri, Carlito, Arial, sans-serif;
+      font-weight: bold;
+      font-size: 11pt;
+      color: #c00000; /* Word red */
+      margin: 0.5mm 0 0.5mm;
+    }
+
+    /* =========================
+       TABLES / BOXES
+    ========================== */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0;
+    }
+
+    td, th {
+      border: 1px solid #000;
+      padding: 3.2mm 3mm;
+      vertical-align: top;
+      font-family: Calibri, Carlito, Arial, sans-serif;
+      font-size: 11pt;
+    }
+
+    .label {
+      font-weight: bold;
+    }
+
+    .box {
+      border: 1px solid #000;
+      padding: 5mm;
+      margin-top: 2mm;
+    }
+
+    .spacer-6 { height: 6mm; }
+    .spacer-4 { height: 4mm; }
+
+    /* =========================
+       CHECKBOXES
+    ========================== */
+    .checklist {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      column-gap: 3mm;
+      row-gap: 1.6mm;
+      margin-top: 1mm;
+      margin-left: 2mm;
+    }
+
+    .checkbox {
+      width: 4.2mm;
+      height: 4.2mm;
+      border: 1px solid #000;
+      display: inline-block;
+      position: relative;
+      margin-top: 0.3mm;
+    }
+    .checkbox.checked::after {
+      content: "✓";
+      position: absolute;
+      font-size: 11pt;
+      left: 0.6mm;
+      top: -1.4mm;
+      font-weight: bold;
+    }
+
+    .line {
+      border-top: 1px solid #000;
+      margin: 7mm 0 6mm;
+    }
+
+    .inline-line {
+      display: inline-block;
+      min-width: 45mm;
+      border-bottom: 1px solid #000;
+      height: 4mm;
+      vertical-align: bottom;
+      padding-left: 2mm;
+    }
+
+    .inline-line.short { min-width: 28mm; }
+    .inline-line.long { min-width: 70mm; }
+
+    /* Signature areas */
+    .sig-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10mm;
+      font-weight: bold;
+    }
+    .sig-line {
+      display: inline-block;
+      width: 75mm;
+      border-bottom: 1px solid #000;
+      height: 6mm;
+      vertical-align: bottom;
+    }
+    .sig-line.small {
+      width: 45mm;
+    }
+
+    /* Footer */
+    .footer-line {
+      border-top: 1px solid #000;
+      margin-top: 8mm;
+      padding-top: 2mm;
+      text-align: center;
+      font-size: 9pt;
+      font-family: Calibri, Carlito, Arial, sans-serif;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- WATERMARK (same image as logo) -->
+  <div class="watermark">
+    <img src="/images/Picture.png" alt="watermark" />
+  </div>
+
+  <div class="page">
+
+    <!-- HEADER -->
+    <div class="header">
+      <div>
+        <img class="logo" src="/images/Picture.png" alt="logo" />
+      </div>
+
+      <div class="header-center tnr">
+        <div class="header-ar">الطـائـر للخـدمـات الهـندسيـة ش م م</div>
+        <div class="header-en">AL TAYER ENGINEERING SERVICES L.L.C</div>
+        <div class="header-sub">Construction of Water Networks</div>
+      </div>
+    </div>
+
+    <div class="form-title">LEAVE APPLICATION – OMANI</div>
+
+    <!-- EMPLOYEE INFO TABLE -->
+    <table>
+      <tr>
+        <td style="width:50%;">
+          <span class="label">Employee Name:</span>
+          <span class="calibri"><%= data.employeeName || "" %></span>
+        </td>
+        <td style="width:50%;">
+          <span class="label">Employee ID No:</span>
+          <span class="calibri"><%= data.employeeId || "" %></span>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <span class="label">Date:</span>
+          <span class="calibri"><%= data.formDate || "" %></span>
+        </td>
+        <td>
+          <span class="label">Position:</span>
+          <span class="calibri"><%= data.position || "" %></span>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <span class="label">Site:</span>
+          <span class="calibri"><%= data.site || "" %></span>
+        </td>
+        <td>
+          <span class="label">Mobile No:</span>
+          <span class="calibri"><%= data.mobileNo || "" %></span>
+        </td>
+      </tr>
+    </table>
+
+    <!-- LEAVE REQUESTED BOX -->
+    <div class="box">
+      <div class="calibri" style="display:flex; align-items:start; gap:8mm;">
+        <div class="label">Leave requested:</div>
+        
+        <div class="checklist calibri" style="margin-top:0; margin-left:0;">
+          <span class="checkbox <%= data.leaveType === 'annual' ? 'checked' : '' %>"></span>
+          <div>Annual Leave (30 days)</div>
+
+          <span class="checkbox <%= data.leaveType === 'paternity' ? 'checked' : '' %>"></span>
+          <div>Paternity Leave (7 days)</div>
+
+          <span class="checkbox <%= data.leaveType === 'familyMedical' ? 'checked' : '' %>"></span>
+          <div>Family Medical Leave</div>
+
+          <span class="checkbox <%= data.leaveType === 'medical' ? 'checked' : '' %>"></span>
+          <div>Medical Leave</div>
+
+          <span class="checkbox <%= data.leaveType === 'exam' ? 'checked' : '' %>"></span>
+          <div>Exam Leave (15 days)</div>
+
+          <span class="checkbox <%= data.leaveType === 'haj' ? 'checked' : '' %>"></span>
+          <div>Haj Leave (15 days)</div>
+
+          <span class="checkbox <%= data.leaveType === 'death' ? 'checked' : '' %>"></span>
+          <div>Death Leave</div>
+        </div>
+      </div>
+
+      <div class="line"></div>
+
+      <!-- ATTACHED -->
+      <div class="calibri" style="display:grid; grid-template-columns: 22mm 1fr; column-gap: 8mm;">
+        <div class="label">Attached:</div>
+        <div>
+          Doctor's certificate
+          <span class="checkbox" style="margin-left:8mm;"></span>
+        </div>
+      </div>
+
+      <div class="calibri" style="margin-left:30mm; margin-top:1mm;">
+        Other support documentation, please specify:
+      </div>
+
+      
+
+      <!-- DATE FOR LEAVE -->
+      <div class="calibri label" style="margin-top:2mm;">Date for Leave:</div>
+
+      <div class="calibri" style="margin-top:2mm; margin-left:6mm;">
+        Commence Leave
+        <span class="inline-line"><%= data.commenceLeave || "" %></span>
+
+        <span style="margin-left:14mm;" class="label">Total Day’s Leave Required:</span>
+        <span class="inline-line short"><%= data.totalDays || "" %></span>
+      </div>
+
+      <div class="calibri" style="margin-top:2mm; margin-left:6mm;">
+        Last day of Leave
+        <span class="inline-line"><%= data.lastDayLeave || "" %></span>
+      </div>
+
+    </div>
+
+    <!-- EMPLOYEE SIGN BOX -->
+    <div class="box">
+      <div class="calibri label" style="margin-bottom:2mm;">Employee to sign</div>
+      <div class="calibri">I declare this to be a true and accurate record of my absence.</div>
+
+      <div class="sig-row calibri">
+        <div>Employee:</div>
+        <div>Date:</div>
+      </div>
+    </div>
+
+    <!-- ASST PM/ENGINEER AUTHORISE BOX -->
+    <div class="box">
+      <div class="calibri label">Asst.Project Manager/Engineer to authorise</div>
+
+      <div class="sig-row calibri">
+        <div>Approved by &amp; seal:</div>
+        <div>Date:</div>
+      </div>
+    </div>
+
+    <!-- HR + PROJECT MANAGER AUTHORISE BOX -->
+    <div class="box">
+      <div class="calibri label" style="display:flex; justify-content:space-between;">
+        <span>HR Manager to authorize</span>
+        <span>Project Manager to authoris</span>
+      </div>
+
+      <div class="sig-row calibri">
+        <div>Approved by &amp; seal:</div>
+        <div>Date:</div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer-line">
+      P.O Box-1829, Postal Code-130, Al-Khuwair-42, Way No-225, Building No.-513, FlatNo-303
+    </div>
+
+  </div>
+</body>
+</html>
