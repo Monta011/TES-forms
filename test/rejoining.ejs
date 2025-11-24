@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Re-Joining Form</title>
+
+  <style>
+    /* =========================
+       PAGE / GLOBAL
+    ========================== */
+    @page { size: A4; margin: 0.3in 0.4in 0.2in 0.4in; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-size: 12.1pt;  /* increased by 10% from 11pt */
+      color: #000;
+      position: relative;
+    }
+
+    .tnr { font-family: "Times New Roman", serif; }
+    .calibri { font-family: Calibri, Carlito, Arial, sans-serif; }
+
+    /* =========================
+       WATERMARK
+    ========================== */
+    .watermark {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.08; /* faint like Word */
+    }
+    .watermark img{
+      width: 87.5mm;  /* reduced by 50% */
+      height: auto;
+    }
+
+    /* Everything else sits above watermark */
+    .page {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* =========================
+       HEADER
+    ========================== */
+    .header {
+      display: flex;
+      align-items: start;
+      margin-top: 2mm;
+      margin-left: 3mm; /* slight shift from left edge */
+    }
+
+    .logo {
+      width: 0.874104in;   /* increased by 10% from 0.79464in */
+      height: 1.392468in;  /* increased by 10% from 1.26588in */
+      margin-right: 6mm;
+    }
+
+    .header-center {
+      text-align: center;
+      line-height: 1.05;
+      margin-left: 60mm; /* shift text content further right */
+      margin-top: 8mm; /* add top spacing */
+    }
+
+    .header-ar {
+      font-size: 31.30512pt;  /* increased by 10% from 28.4592pt */
+      font-weight: normal;
+      margin-bottom: 1mm;
+    }
+
+    .header-en {
+      font-size: 22.3608pt;  /* increased by 10% from 20.328pt */
+      font-weight: normal;
+      text-decoration: underline;
+      margin-bottom: 0.8mm;
+      white-space: nowrap; /* prevent line break */
+    }
+
+    .header-sub {
+      font-size: 12.29844pt;  /* increased by 10% from 11.1804pt */
+      text-decoration: underline;
+      margin-bottom: 2mm;
+      text-align: right; /* align to the right */
+    }
+
+    .form-title {
+      text-align: center;
+      font-family: Calibri, Carlito, Arial, sans-serif;
+      font-weight: bold;
+      font-size: 12.1pt;  /* increased by 10% from 11pt */
+      color: #c00000; /* Word red */
+      margin: 4mm 0 4mm;
+      text-decoration: underline;
+    }
+
+    /* =========================
+       TABLES
+    ========================== */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0;
+    }
+
+    td, th {
+      border: 1px solid #000;
+      padding: 3.2mm 3mm;
+      vertical-align: top;
+      font-family: Calibri, Carlito, Arial, sans-serif;
+      font-size: 12.1pt;  /* increased by 10% from 11pt */
+    }
+
+    .row-num {
+      width: 8%;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .row-label {
+      width: 42%;
+      font-weight: normal;
+    }
+
+    .row-value {
+      width: 50%;
+      font-weight: normal;
+    }
+
+    /* =========================
+       DECLARATION SECTION
+    ========================== */
+    .declaration {
+      margin-top: 6mm;
+      font-family: Calibri, Carlito, Arial, sans-serif;
+      font-size: 12.1pt;
+      line-height: 1.4;
+    }
+
+    .declaration-title {
+      font-weight: bold;
+      margin-bottom: 2mm;
+    }
+
+    .declaration-text {
+      text-align: justify;
+      margin-bottom: 4mm;
+    }
+
+    /* =========================
+       SIGNATURE SECTION
+    ========================== */
+    .signature-section {
+      margin-top: 8mm;
+      font-family: Calibri, Carlito, Arial, sans-serif;
+      font-size: 12.1pt;
+    }
+
+    .signature-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 15mm;
+    }
+
+    .signature-item {
+      font-weight: bold;
+    }
+
+    /* Footer */
+    .footer-line {
+      border-top: 1px solid #000;
+      margin-top: 10mm;
+      padding-top: 2mm;
+      text-align: center;
+      font-size: 10pt;
+      font-family: Calibri, Carlito, Arial, sans-serif;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- WATERMARK (same image as logo) -->
+  <div class="watermark">
+    <img src="/images/Picture.png" alt="watermark" />
+  </div>
+
+  <div class="page">
+
+    <!-- HEADER -->
+    <div class="header">
+      <div>
+        <img class="logo" src="/images/Picture.png" alt="logo" />
+      </div>
+
+      <div class="header-center tnr">
+        <div class="header-ar">الطـائـر للخـدمـات الهـندسيـة ش م م</div>
+        <div class="header-en">AL TAYER ENGINEERING SERVICES L.L.C</div>
+        <div class="header-sub">Construction of Water Networks</div>
+      </div>
+    </div>
+
+    <div class="form-title">RE-JOINING FORM</div>
+
+    <!-- MAIN TABLE -->
+    <table>
+      <tr>
+        <td class="row-num">1</td>
+        <td class="row-label">NAME [BLOCK LETTERS]</td>
+        <td class="row-value"><%= data.name || "" %></td>
+      </tr>
+      <tr>
+        <td class="row-num">2</td>
+        <td class="row-label">WROK ID</td>
+        <td class="row-value"><%= data.wrokId || "" %></td>
+      </tr>
+      <tr>
+        <td class="row-num">3</td>
+        <td class="row-label">MOBILE NO</td>
+        <td class="row-value"><%= data.mobileNo || "" %></td>
+      </tr>
+      <tr>
+        <td class="row-num">4</td>
+        <td class="row-label">DESIGNATION</td>
+        <td class="row-value"><%= data.designation || "" %></td>
+      </tr>
+      <tr>
+        <td class="row-num">5</td>
+        <td class="row-label">TYPE OF LEAVE TAKEN (Annual, Emergency & Medical)</td>
+        <td class="row-value"><%= data.leaveType || "" %></td>
+      </tr>
+      <tr>
+        <td class="row-num">6</td>
+        <td class="row-label">DATE OF LEAVING</td>
+        <td class="row-value"><%= data.dateOfLeaving || "" %></td>
+      </tr>
+      <tr>
+        <td class="row-num">7</td>
+        <td class="row-label">DATE OF JOINING</td>
+        <td class="row-value"><%= data.dateOfJoining || "" %></td>
+      </tr>
+      <tr>
+        <td class="row-num">8</td>
+        <td class="row-label">TOTAL NO OF LEAVE</td>
+        <td class="row-value"><%= data.totalLeave || "" %></td>
+      </tr>
+      <tr>
+        <td class="row-num">9</td>
+        <td class="row-label">ALLOWED LEAVE</td>
+        <td class="row-value"><%= data.allowedLeave || "" %></td>
+      </tr>
+      <tr>
+        <td class="row-num">10</td>
+        <td class="row-label">TOTAL EXTRA LEAVE TAKEN</td>
+        <td class="row-value"><%= data.extraLeave || "" %></td>
+      </tr>
+      <tr>
+        <td class="row-num">11</td>
+        <td class="row-label">PASSPORT NO</td>
+        <td class="row-value"><%= data.passportNo || "" %></td>
+      </tr>
+      <tr>
+        <td class="row-num">12</td>
+        <td class="row-label">PASSPORT HAND OVER TO OFFICE (YES/NO)</td>
+        <td class="row-value"><%= data.passportHandedOver || "" %></td>
+      </tr>
+    </table>
+
+    <!-- DECLARATION -->
+    <div class="declaration">
+      <div class="declaration-title">Declaration:</div>
+      <div class="declaration-text">
+        I hereby declare that the details furnished above are true and correct to the best of my knowledge and 
+        belief and I undertake to inform you of any changes therein, immediately. In case any of the above information is found 
+        to be false, untrue, misleading, or misrepresenting, I am aware that I may be held liable for it.
+      </div>
+
+      <div style="margin-top:6mm;">
+        <span style="font-weight:bold;">Place:</span>
+      </div>
+    </div>
+
+    <!-- SIGNATURE SECTION -->
+    <div class="signature-section">
+      <div class="signature-row">
+        <div class="signature-item">Date:</div>
+        <div class="signature-item">SIGNATURE OF EMPLOYEE</div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer-line">
+      P.O Box-1829, Postal Code-130, Al-Khuwair-42, Way No-225, Building No.-513, Flat No-304
+    </div>
+
+  </div>
+</body>
+</html>
