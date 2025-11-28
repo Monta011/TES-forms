@@ -1,0 +1,187 @@
+<!-- Re-Joining Form Fields -->
+<div class="space-y-6">
+  <!-- Employee Information Section -->
+  <div class="bg-gray-50 p-4 rounded-lg">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4">Employee Information</h3>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <!-- Name -->
+      <div>
+        <label for="name" class="block text-sm font-medium text-gray-700 mb-1">
+          Name <span class="text-red-500">*</span>
+        </label>
+        <input 
+          type="text" 
+          id="name" 
+          name="name" 
+          value="<%= formData.name || '' %>"
+          required
+          class="w-full px-4 py-2 border <%= errors.name ? 'border-red-500' : 'border-gray-300' %> rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+        <% if (errors.name) { %>
+          <p class="text-red-500 text-sm mt-1"><%= errors.name %></p>
+        <% } %>
+      </div>
+
+      <!-- Work ID -->
+      <div>
+        <label for="wrokId" class="block text-sm font-medium text-gray-700 mb-1">
+          Work ID <span class="text-red-500">*</span>
+        </label>
+        <input 
+          type="text" 
+          id="wrokId" 
+          name="wrokId" 
+          value="<%= formData.wrokId || '' %>"
+          required
+          class="w-full px-4 py-2 border <%= errors.wrokId ? 'border-red-500' : 'border-gray-300' %> rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+        <% if (errors.wrokId) { %>
+          <p class="text-red-500 text-sm mt-1"><%= errors.wrokId %></p>
+        <% } %>
+      </div>
+
+      <!-- Mobile Number -->
+      <div>
+        <label for="mobileNo" class="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
+        <input 
+          type="tel" 
+          id="mobileNo" 
+          name="mobileNo" 
+          value="<%= formData.mobileNo || '' %>"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+      </div>
+
+      <!-- Designation -->
+      <div>
+        <label for="designation" class="block text-sm font-medium text-gray-700 mb-1">Designation</label>
+        <input 
+          type="text" 
+          id="designation" 
+          name="designation" 
+          value="<%= formData.designation || '' %>"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+      </div>
+    </div>
+  </div>
+
+  <!-- Leave Information Section -->
+  <div class="bg-gray-50 p-4 rounded-lg">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4">Leave Information</h3>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <!-- Leave Type -->
+      <div>
+        <label for="leaveType" class="block text-sm font-medium text-gray-700 mb-1">Leave Type</label>
+        <input 
+          type="text" 
+          id="leaveType" 
+          name="leaveType" 
+          value="<%= formData.leaveType || '' %>"
+          placeholder="e.g., Annual Leave, Sick Leave"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+      </div>
+
+      <!-- Date of Leaving -->
+      <div>
+        <label for="dateOfLeaving" class="block text-sm font-medium text-gray-700 mb-1">Date of Leaving</label>
+        <input 
+          type="date" 
+          id="dateOfLeaving" 
+          name="dateOfLeaving" 
+          value="<%= formData.dateOfLeaving || '' %>"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+      </div>
+
+      <!-- Date of Joining -->
+      <div>
+        <label for="dateOfJoining" class="block text-sm font-medium text-gray-700 mb-1">Date of Joining</label>
+        <input 
+          type="date" 
+          id="dateOfJoining" 
+          name="dateOfJoining" 
+          value="<%= formData.dateOfJoining || '' %>"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+      </div>
+
+      <!-- Total Leave -->
+      <div>
+        <label for="totalLeave" class="block text-sm font-medium text-gray-700 mb-1">Total Leave (days)</label>
+        <input 
+          type="number" 
+          id="totalLeave" 
+          name="totalLeave" 
+          value="<%= formData.totalLeave || '' %>"
+          min="0"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+      </div>
+
+      <!-- Allowed Leave -->
+      <div>
+        <label for="allowedLeave" class="block text-sm font-medium text-gray-700 mb-1">Allowed Leave (days)</label>
+        <input 
+          type="number" 
+          id="allowedLeave" 
+          name="allowedLeave" 
+          value="<%= formData.allowedLeave || '' %>"
+          min="0"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+      </div>
+
+      <!-- Extra Leave -->
+      <div>
+        <label for="extraLeave" class="block text-sm font-medium text-gray-700 mb-1">Extra Leave (days)</label>
+        <input 
+          type="number" 
+          id="extraLeave" 
+          name="extraLeave" 
+          value="<%= formData.extraLeave || '' %>"
+          min="0"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+      </div>
+    </div>
+  </div>
+
+  <!-- Passport Information Section -->
+  <div class="bg-gray-50 p-4 rounded-lg">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4">Passport Information</h3>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <!-- Passport Number -->
+      <div>
+        <label for="passportNo" class="block text-sm font-medium text-gray-700 mb-1">Passport Number</label>
+        <input 
+          type="text" 
+          id="passportNo" 
+          name="passportNo" 
+          value="<%= formData.passportNo || '' %>"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+      </div>
+
+      <!-- Passport Handed Over -->
+      <div>
+        <label for="passportHandedOver" class="block text-sm font-medium text-gray-700 mb-1">Passport Handed Over</label>
+        <select 
+          id="passportHandedOver" 
+          name="passportHandedOver"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="">Select...</option>
+          <option value="YES" <%= formData.passportHandedOver === 'YES' ? 'selected' : '' %>>YES</option>
+          <option value="NO" <%= formData.passportHandedOver === 'NO' ? 'selected' : '' %>>NO</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Re-Joining form: No signatures required -->
+</div>

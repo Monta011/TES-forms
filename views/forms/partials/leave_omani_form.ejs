@@ -1,0 +1,258 @@
+<!-- Leave Application - Omani Form Fields -->
+<div class="space-y-6">
+  <!-- Employee Information Section -->
+  <div class="bg-gray-50 p-4 rounded-lg">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4">Employee Information</h3>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <!-- Employee Name -->
+      <div>
+        <label for="employeeName" class="block text-sm font-medium text-gray-700 mb-1">
+          Employee Name <span class="text-red-500">*</span>
+        </label>
+        <input 
+          type="text" 
+          id="employeeName" 
+          name="employeeName" 
+          value="<%= formData.employeeName || '' %>"
+          required
+          class="w-full px-4 py-2 border <%= errors.employeeName ? 'border-red-500' : 'border-gray-300' %> rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+        <% if (errors.employeeName) { %>
+          <p class="text-red-500 text-sm mt-1"><%= errors.employeeName %></p>
+        <% } %>
+      </div>
+
+      <!-- Employee ID -->
+      <div>
+        <label for="employeeId" class="block text-sm font-medium text-gray-700 mb-1">
+          Employee ID <span class="text-red-500">*</span>
+        </label>
+        <input 
+          type="text" 
+          id="employeeId" 
+          name="employeeId" 
+          value="<%= formData.employeeId || '' %>"
+          required
+          class="w-full px-4 py-2 border <%= errors.employeeId ? 'border-red-500' : 'border-gray-300' %> rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+        <% if (errors.employeeId) { %>
+          <p class="text-red-500 text-sm mt-1"><%= errors.employeeId %></p>
+        <% } %>
+      </div>
+
+      <!-- Form Date -->
+      <div>
+        <label for="formDate" class="block text-sm font-medium text-gray-700 mb-1">Form Date</label>
+        <input 
+          type="date" 
+          id="formDate" 
+          name="formDate" 
+          value="<%= formData.formDate || '' %>"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+      </div>
+
+      <!-- Position -->
+      <div>
+        <label for="position" class="block text-sm font-medium text-gray-700 mb-1">Position</label>
+        <input 
+          type="text" 
+          id="position" 
+          name="position" 
+          value="<%= formData.position || '' %>"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+      </div>
+
+      <!-- Site -->
+      <div>
+        <label for="site" class="block text-sm font-medium text-gray-700 mb-1">Site</label>
+        <input 
+          type="text" 
+          id="site" 
+          name="site" 
+          value="<%= formData.site || '' %>"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+      </div>
+
+      <!-- Mobile Number -->
+      <div>
+        <label for="mobileNo" class="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
+        <input 
+          type="tel" 
+          id="mobileNo" 
+          name="mobileNo" 
+          value="<%= formData.mobileNo || '' %>"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Leave Request Section -->
+  <div class="bg-gray-50 p-4 rounded-lg">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4">Leave Request</h3>
+    
+    <!-- Leave Type -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-gray-700 mb-2">Leave Type</label>
+      <div class="space-y-2">
+        <div class="flex items-center">
+          <input 
+            type="radio" 
+            id="leaveTypeAnnual" 
+            name="leaveType" 
+            value="annual"
+            <%= formData.leaveType === 'annual' ? 'checked' : '' %>
+            class="h-4 w-4 text-blue-600 focus:ring-blue-500"
+          >
+          <label for="leaveTypeAnnual" class="ml-2 text-sm text-gray-700">Annual Leave</label>
+        </div>
+        <div class="flex items-center">
+          <input 
+            type="radio" 
+            id="leaveTypePaternity" 
+            name="leaveType" 
+            value="paternity"
+            <%= formData.leaveType === 'paternity' ? 'checked' : '' %>
+            class="h-4 w-4 text-blue-600 focus:ring-blue-500"
+          >
+          <label for="leaveTypePaternity" class="ml-2 text-sm text-gray-700">Paternity Leave</label>
+        </div>
+        <div class="flex items-center">
+          <input 
+            type="radio" 
+            id="leaveTypeFamilyMedical" 
+            name="leaveType" 
+            value="familyMedical"
+            <%= formData.leaveType === 'familyMedical' ? 'checked' : '' %>
+            class="h-4 w-4 text-blue-600 focus:ring-blue-500"
+          >
+          <label for="leaveTypeFamilyMedical" class="ml-2 text-sm text-gray-700">Family Medical Leave</label>
+        </div>
+        <div class="flex items-center">
+          <input 
+            type="radio" 
+            id="leaveTypeMedical" 
+            name="leaveType" 
+            value="medical"
+            <%= formData.leaveType === 'medical' ? 'checked' : '' %>
+            class="h-4 w-4 text-blue-600 focus:ring-blue-500"
+          >
+          <label for="leaveTypeMedical" class="ml-2 text-sm text-gray-700">Medical Leave</label>
+        </div>
+        <div class="flex items-center">
+          <input 
+            type="radio" 
+            id="leaveTypeExam" 
+            name="leaveType" 
+            value="exam"
+            <%= formData.leaveType === 'exam' ? 'checked' : '' %>
+            class="h-4 w-4 text-blue-600 focus:ring-blue-500"
+          >
+          <label for="leaveTypeExam" class="ml-2 text-sm text-gray-700">Exam Leave</label>
+        </div>
+        <div class="flex items-center">
+          <input 
+            type="radio" 
+            id="leaveTypeHaj" 
+            name="leaveType" 
+            value="haj"
+            <%= formData.leaveType === 'haj' ? 'checked' : '' %>
+            class="h-4 w-4 text-blue-600 focus:ring-blue-500"
+          >
+          <label for="leaveTypeHaj" class="ml-2 text-sm text-gray-700">Haj Leave</label>
+        </div>
+        <div class="flex items-center">
+          <input 
+            type="radio" 
+            id="leaveTypeDeath" 
+            name="leaveType" 
+            value="death"
+            <%= formData.leaveType === 'death' ? 'checked' : '' %>
+            class="h-4 w-4 text-blue-600 focus:ring-blue-500"
+          >
+          <label for="leaveTypeDeath" class="ml-2 text-sm text-gray-700">Death in Family Leave</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- Commence Leave -->
+      <div>
+        <label for="commenceLeave" class="block text-sm font-medium text-gray-700 mb-1">Commence Leave</label>
+        <input 
+          type="date" 
+          id="commenceLeave" 
+          name="commenceLeave" 
+          value="<%= formData.commenceLeave || '' %>"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+      </div>
+
+      <!-- Total Days -->
+      <div>
+        <label for="totalDays" class="block text-sm font-medium text-gray-700 mb-1">Total Days</label>
+        <input 
+          type="number" 
+          id="totalDays" 
+          name="totalDays" 
+          value="<%= formData.totalDays || '' %>"
+          min="0"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+      </div>
+
+      <!-- Last Day of Leave -->
+      <div>
+        <label for="lastDayLeave" class="block text-sm font-medium text-gray-700 mb-1">Last Day of Leave</label>
+        <input 
+          type="date" 
+          id="lastDayLeave" 
+          name="lastDayLeave" 
+          value="<%= formData.lastDayLeave || '' %>"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Signatures Section (placed at the very bottom of the form) -->
+<div class="bg-gray-50 p-4 rounded-lg mt-6">
+  <h3 class="text-lg font-semibold text-gray-800 mb-4">Signatures</h3>
+  <div class="space-y-8">
+    <%- include('signature_block', {
+      title: 'Employee to sign',
+      subtitle: 'I declare this to be a true and accurate record of my absence.',
+      idPrefix: 'employeeSignature',
+      fieldName: 'employeeSignature',
+      dateFieldName: 'employeeSignatureDate',
+      formData,
+      errors
+    }) %>
+
+    <%- include('signature_block', {
+      title: 'Asst. Project Manager / Engineer to authorize',
+      subtitle: '',
+      idPrefix: 'managerSignature',
+      fieldName: 'managerSignature',
+      dateFieldName: 'managerSignatureDate',
+      formData,
+      errors
+    }) %>
+
+    <%- include('signature_block', {
+      title: 'HR Manager to authorize',
+      subtitle: '',
+      idPrefix: 'hrSignature',
+      fieldName: 'hrSignature',
+      dateFieldName: 'hrSignatureDate',
+      formData,
+      errors
+    }) %>
+  </div>
+</div>

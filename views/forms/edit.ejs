@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+  <%- include('../partials/navbar') %>
+  
+  <main class="flex-grow container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+      <!-- Header -->
+      <div class="mb-6">
+        <a href="/forms/<%= type %>" class="text-blue-600 hover:text-blue-800 text-sm mb-2 inline-block">&larr; Back to List</a>
+        <h1 class="text-3xl font-bold text-gray-800"><%= displayName %></h1>
+        <p class="text-gray-600 mt-1">Edit application</p>
+      </div>
+
+      <!-- Form -->
+      <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
+        <form method="POST" action="/forms/<%= type %>/<%= application.id %>">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          
+          <%- include('partials/' + type.replace(/-/g, '_') + '_form', { formData, errors }) %>
+
+          <!-- Form Actions -->
+          <div class="flex flex-col md:flex-row gap-3 mt-8 pt-6 border-t border-gray-200">
+            <button 
+              type="submit" 
+              name="action" 
+              value="save"
+              class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition"
+            >
+              Save & Close
+            </button>
+            <button 
+              type="submit" 
+              name="action" 
+              value="export"
+              class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition"
+            >
+              Save & Export PDF
+            </button>
+            <a 
+              href="/forms/<%= type %>" 
+              class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg transition text-center"
+            >
+              Cancel
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <%- include('../partials/footer') %>
+</body>
+</html>

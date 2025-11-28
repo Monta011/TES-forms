@@ -287,8 +287,13 @@
     <!-- SIGNATURE SECTION -->
     <div class="signature-section">
       <div class="signature-row">
-        <div class="signature-item">Date:</div>
-        <div class="signature-item">SIGNATURE OF EMPLOYEE</div>
+        <div class="signature-item">Date: <%= data.employeeSignatureDate || '' %></div>
+        <div class="signature-item">
+          SIGNATURE OF EMPLOYEE
+          <% if (data.employeeSignature) { %>
+            <img src="<%= data.employeeSignature %>" alt="Employee Signature" style="max-height:40px; display:block; margin-top:4px;">
+          <% } %>
+        </div>
       </div>
     </div>
 

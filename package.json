@@ -1,0 +1,30 @@
+{
+  "name": "tes-forms",
+  "version": "1.0.0",
+  "description": "Public-facing web app for digitizing company application forms (Re-Joining, Leave Expats, Leave Omani)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:generate": "prisma generate",
+    "prisma:studio": "prisma studio"
+  },
+  "keywords": ["forms", "express", "ejs", "prisma", "pdf"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.4.1",
+    "puppeteer": "^23.7.1",
+    "csurf": "^1.11.0",
+    "cookie-parser": "^1.4.6"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7",
+    "prisma": "^5.22.0"
+  }
+}
