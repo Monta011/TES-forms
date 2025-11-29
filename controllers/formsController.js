@@ -423,8 +423,6 @@ function validateFormData(type, formData, options = {}) {
     // New radio fields
     validatedData.paymentOption = formData.paymentOption || '';
     validatedData.ticketOption = formData.ticketOption || '';
-    // Checkbox remains
-    validatedData.wantCompensation = formData.wantCompensation === 'true' || formData.wantCompensation === true;
 
     if (strict) {
       if (!validatedData.formDate) errors.formDate = 'Form Date is required';

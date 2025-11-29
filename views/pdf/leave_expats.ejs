@@ -325,11 +325,11 @@
       
       <div class="calibri" style="margin-left:6mm; margin-top:2mm;">
         <div style="display:flex; align-items:center; gap:2mm; margin-bottom:1.5mm;">
-          <span class="checkbox <%= data.paymentAdvance ? 'checked' : '' %>"></span>
+          <span class="checkbox <%= data.paymentOption === 'advance' ? 'checked' : '' %>"></span>
           <div>Salary to be paid in advance to include till the last working day of leave</div>
         </div>
         <div style="display:flex; align-items:center; gap:2mm;">
-          <span class="checkbox <%= data.paymentAfterReturn ? 'checked' : '' %>"></span>
+          <span class="checkbox <%= data.paymentOption === 'afterReturn' ? 'checked' : '' %>"></span>
           <div>Salary to be paid after return</div>
         </div>
       </div>
@@ -342,15 +342,15 @@
 
       <div class="calibri" style="margin-top:2mm; display:flex; gap:15mm;">
         <div style="display:flex; align-items:center; gap:2mm;">
-          <span class="checkbox <%= data.issueMyTicket ? 'checked' : '' %>"></span>
+          <span class="checkbox <%= data.ticketOption === 'myTicket' ? 'checked' : '' %>"></span>
           <div>Issue my ticket</div>
         </div>
         <div style="display:flex; align-items:center; gap:2mm;">
-          <span class="checkbox <%= data.issueTicketFamily ? 'checked' : '' %>"></span>
+          <span class="checkbox <%= data.ticketOption === 'family' ? 'checked' : '' %>"></span>
           <div>Issue ticket for me & my family</div>
         </div>
         <div style="display:flex; align-items:center; gap:2mm;">
-          <span class="checkbox <%= data.wantCompensation ? 'checked' : '' %>"></span>
+          <span class="checkbox <%= data.ticketOption === 'compensation' ? 'checked' : '' %>"></span>
           <div>I want compensation for my ticket</div>
         </div>
       </div>
@@ -362,10 +362,10 @@
       <div class="calibri">I declare this to be a true and accurate record of my absence.</div>
 
       <div class="sig-row calibri">
-        <div>
+        <div style="position:relative;">
           Employee:
           <% if (data.employeeSignature) { %>
-            <img src="<%= data.employeeSignature %>" alt="Employee Signature" style="max-height:40px; display:block; margin-top:4px;">
+            <img src="<%= data.employeeSignature %>" alt="Employee Signature" style="position:absolute; left:25mm; top:-20px; height:45px; max-width:60mm; object-fit:contain;">
           <% } %>
         </div>
         <div>Date: <%= data.employeeSignatureDate || '' %></div>
@@ -377,10 +377,10 @@
       <div class="calibri label">Site Engineer / Asst. Project Manager to authorise</div>
 
       <div class="sig-row calibri">
-        <div>
+        <div style="position:relative;">
           Approved by &amp; seal:
           <% if (data.managerSignature) { %>
-            <img src="<%= data.managerSignature %>" alt="Manager Signature" style="max-height:40px; display:block; margin-top:4px;">
+            <img src="<%= data.managerSignature %>" alt="Manager Signature" style="position:absolute; left:45mm; top:-20px; height:45px; max-width:60mm; object-fit:contain;">
           <% } %>
         </div>
         <div>Date: <%= data.managerSignatureDate || '' %></div>
@@ -395,10 +395,10 @@
       </div>
 
       <div class="sig-row calibri">
-        <div>
+        <div style="position:relative;">
           Approved by &amp; seal:
           <% if (data.hrSignature) { %>
-            <img src="<%= data.hrSignature %>" alt="HR Signature" style="max-height:40px; display:block; margin-top:4px;">
+            <img src="<%= data.hrSignature %>" alt="HR Signature" style="position:absolute; left:45mm; top:-20px; height:45px; max-width:60mm; object-fit:contain;">
           <% } %>
         </div>
         <div>Date: <%= data.hrSignatureDate || '' %></div>

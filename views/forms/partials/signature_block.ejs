@@ -11,9 +11,13 @@
 
     <!-- Controls + Inline date on desktop, stacked on mobile -->
     <div class="mt-2 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-      <div class="flex gap-2">
+      <div class="flex gap-2 flex-wrap">
         <button type="button" class="px-3 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm" data-action="clear" data-target="<%= idPrefix %>">Clear</button>
-        <button type="button" class="px-3 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm" data-action="save" data-target="<%= idPrefix %>">Save Signature</button>
+        <button type="button" id="<%= idPrefix %>SaveBtn" class="px-3 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed" data-action="save" data-target="<%= idPrefix %>">Save Signature</button>
+        <label class="px-3 py-2 rounded bg-green-600 hover:bg-green-700 text-white text-sm cursor-pointer">
+          Upload
+          <input type="file" accept="image/*" class="hidden" data-action="upload" data-target="<%= idPrefix %>">
+        </label>
       </div>
       <div class="md:flex md:items-center md:gap-2 w-full md:w-auto">
         <label for="<%= idPrefix %>Date" class="block md:inline text-sm font-medium text-gray-700 md:mb-0 mb-1">Date</label>
@@ -36,6 +40,14 @@
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const input = document.getElementById(idPrefix + 'Input');
+    const saveBtn = document.getElementById(idPrefix + 'SaveBtn');
+    let isPreviewMode = false;
+
+    function updateSaveButton() {
+      if (saveBtn) {
+        saveBtn.disabled = isPreviewMode;
+      }
+    }
 
     function resize() {
       const rect = canvas.getBoundingClientRect();
@@ -45,29 +57,58 @@
       canvas.style.width = rect.width + 'px';
       canvas.style.height = '192px';
       ctx.scale(ratio, ratio);
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 3;
       ctx.lineCap = 'round';
-      ctx.strokeStyle = '#111827';
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = '#000000';
+      
+      // Restore saved signature if exists
+      loadSavedSignature();
     }
     resize();
     window.addEventListener('resize', resize);
 
+    // Smooth line drawing
     let drawing = false;
-    let last = null;
+    let lastPoint = null;
+    
     function start(e) {
+      // If in preview mode, clear the canvas first
+      if (isPreviewMode) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        isPreviewMode = false;
+        updateSaveButton();
+      }
+      
       drawing = true;
-      last = getPos(e);
+      lastPoint = getPos(e);
+      
+      // Start the path
+      ctx.beginPath();
+      ctx.moveTo(lastPoint.x, lastPoint.y);
     }
+    
     function move(e) {
       if (!drawing) return;
-      const pos = getPos(e);
-      ctx.beginPath();
-      ctx.moveTo(last.x, last.y);
-      ctx.lineTo(pos.x, pos.y);
+      e.preventDefault();
+      
+      const currentPoint = getPos(e);
+      
+      // Draw line from last point to current point
+      ctx.lineTo(currentPoint.x, currentPoint.y);
       ctx.stroke();
-      last = pos;
+      
+      // Update last point
+      ctx.beginPath();
+      ctx.moveTo(currentPoint.x, currentPoint.y);
+      
+      lastPoint = currentPoint;
     }
-    function end() { drawing = false; }
+    
+    function end() { 
+      drawing = false;
+      lastPoint = null;
+    }
 
     function getPos(e) {
       const rect = canvas.getBoundingClientRect();
@@ -82,8 +123,33 @@
     window.addEventListener('mouseup', end);
 
     canvas.addEventListener('touchstart', start, { passive: true });
-    canvas.addEventListener('touchmove', move, { passive: true });
+    canvas.addEventListener('touchmove', move, { passive: false });
     window.addEventListener('touchend', end);
+
+    // Load saved signature from hidden input
+    function loadSavedSignature() {
+      const savedData = input.value;
+      if (savedData && savedData.startsWith('data:image')) {
+        const img = new Image();
+        img.onload = function() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          
+          // Calculate scaling to fit within canvas while maintaining aspect ratio
+          const canvasWidth = canvas.width / ctx.getTransform().a;
+          const canvasHeight = canvas.height / ctx.getTransform().d;
+          const scale = Math.min(canvasWidth / img.width, canvasHeight / img.height, 1);
+          
+          // Center the image
+          const x = (canvasWidth - img.width * scale) / 2;
+          const y = (canvasHeight - img.height * scale) / 2;
+          
+          ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+          isPreviewMode = true;
+          updateSaveButton();
+        };
+        img.src = savedData;
+      }
+    }
 
     // Buttons
     const dateInput = document.getElementById(idPrefix + 'Date');
@@ -100,15 +166,123 @@
         btn.addEventListener('click', () => {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           input.value = '';
+          isPreviewMode = false;
+          updateSaveButton();
           if (dateInput) dateInput.value = '';
         });
       } else if (action === 'save') {
         btn.addEventListener('click', () => {
-          input.value = canvas.toDataURL('image/png');
-          if (dateInput) dateInput.value = todayISO();
+          // Don't save if in preview mode (already saved)
+          if (isPreviewMode) {
+            return;
+          }
+          
+          // Trim transparent pixels and scale up the signature
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const pixels = imageData.data;
+          
+          // Find bounding box of non-transparent pixels
+          let minX = canvas.width, minY = canvas.height, maxX = 0, maxY = 0;
+          for (let y = 0; y < canvas.height; y++) {
+            for (let x = 0; x < canvas.width; x++) {
+              const alpha = pixels[(y * canvas.width + x) * 4 + 3];
+              if (alpha > 0) {
+                if (x < minX) minX = x;
+                if (x > maxX) maxX = x;
+                if (y < minY) minY = y;
+                if (y > maxY) maxY = y;
+              }
+            }
+          }
+          
+          // If signature exists, crop and scale it
+          if (maxX >= minX && maxY >= minY) {
+            const padding = 10;
+            const cropWidth = maxX - minX + padding * 2;
+            const cropHeight = maxY - minY + padding * 2;
+            
+            // Create temporary canvas for cropped signature
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCanvas.width = cropWidth;
+            tempCanvas.height = cropHeight;
+            
+            // Draw cropped signature
+            tempCtx.drawImage(canvas, 
+              minX - padding, minY - padding, cropWidth, cropHeight,
+              0, 0, cropWidth, cropHeight
+            );
+            
+            input.value = tempCanvas.toDataURL('image/png');
+            isPreviewMode = true;
+            updateSaveButton();
+            
+            // Reload to show the saved signature
+            loadSavedSignature();
+          }
+          
+          if (dateInput && !dateInput.value) dateInput.value = todayISO();
+        });
+      } else if (action === 'upload') {
+        btn.addEventListener('change', (e) => {
+          const file = e.target.files[0];
+          if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+              const img = new Image();
+              img.onload = function() {
+                // Create a properly sized canvas with minimum size for better visibility
+                const minWidth = 400;
+                const minHeight = 200;
+                const maxWidth = 800;
+                const maxHeight = 400;
+                
+                let width = img.width;
+                let height = img.height;
+                
+                // Scale up if too small (for better PDF visibility)
+                if (width < minWidth || height < minHeight) {
+                  const scale = Math.max(minWidth / width, minHeight / height);
+                  width = width * scale;
+                  height = height * scale;
+                }
+                
+                // Scale down if too large
+                if (width > maxWidth || height > maxHeight) {
+                  const scale = Math.min(maxWidth / width, maxHeight / height);
+                  width = width * scale;
+                  height = height * scale;
+                }
+                
+                // Create temp canvas with proper size
+                const tempCanvas = document.createElement('canvas');
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCanvas.width = width;
+                tempCanvas.height = height;
+                tempCtx.drawImage(img, 0, 0, width, height);
+                
+                // Save the properly-sized image
+                input.value = tempCanvas.toDataURL('image/png');
+                if (dateInput && !dateInput.value) dateInput.value = todayISO();
+                
+                // Load as preview
+                isPreviewMode = true;
+                updateSaveButton();
+                loadSavedSignature();
+              };
+              img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+            // Reset file input
+            e.target.value = '';
+          }
         });
       }
     });
+    
+    // Initial load
+    loadSavedSignature();
+    updateSaveButton();
   };
 
   // Initialize after DOM loaded

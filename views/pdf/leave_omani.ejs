@@ -330,10 +330,10 @@
       <div class="calibri">I declare this to be a true and accurate record of my absence.</div>
 
       <div class="sig-row calibri">
-        <div>
+        <div style="position:relative;">
           Employee:
           <% if (data.employeeSignature) { %>
-            <img src="<%= data.employeeSignature %>" alt="Employee Signature" style="max-height:40px; display:block; margin-top:4px;">
+            <img src="<%= data.employeeSignature %>" alt="Employee Signature" style="position:absolute; left:25mm; top:-20px; height:45px; max-width:60mm; object-fit:contain;">
           <% } %>
         </div>
         <div>Date: <%= data.employeeSignatureDate || '' %></div>
@@ -345,10 +345,10 @@
       <div class="calibri label">Asst.Project Manager/Engineer to authorise</div>
 
       <div class="sig-row calibri">
-        <div>
+        <div style="position:relative;">
           Approved by &amp; seal:
           <% if (data.managerSignature) { %>
-            <img src="<%= data.managerSignature %>" alt="Manager Signature" style="max-height:40px; display:block; margin-top:4px;">
+            <img src="<%= data.managerSignature %>" alt="Manager Signature" style="position:absolute; left:45mm; top:-20px; height:45px; max-width:60mm; object-fit:contain;">
           <% } %>
         </div>
         <div>Date: <%= data.managerSignatureDate || '' %></div>
@@ -363,10 +363,10 @@
       </div>
 
       <div class="sig-row calibri">
-        <div>
+        <div style="position:relative;">
           Approved by &amp; seal:
           <% if (data.hrSignature) { %>
-            <img src="<%= data.hrSignature %>" alt="HR Signature" style="max-height:40px; display:block; margin-top:4px;">
+            <img src="<%= data.hrSignature %>" alt="HR Signature" style="position:absolute; left:45mm; top:-20px; height:45px; max-width:60mm; object-fit:contain;">
           <% } %>
         </div>
         <div>Date: <%= data.hrSignatureDate || '' %></div>

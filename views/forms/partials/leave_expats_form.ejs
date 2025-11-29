@@ -44,6 +44,7 @@
       <!-- Form Date -->
       <div>
         <label for="formDate" class="block text-sm font-medium text-gray-700 mb-1">Form Date <% if (strictRequired) { %><span class="text-red-500">*</span><% } %></label>
+        <% if (errors.formDate) { %><p class="text-red-500 text-sm mt-1 mb-1"><%= errors.formDate %></p><% } %>
         <input 
           type="date" 
           id="formDate" 
@@ -51,7 +52,6 @@
           value="<%= formData.formDate || '' %>"
           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         >
-        <% if (errors.formDate) { %><p class="text-red-500 text-sm mt-1"><%= errors.formDate %></p><% } %>
       </div>
 
       <!-- Position -->
@@ -283,18 +283,18 @@
       </div>
     </div>
 
-    <!-- Compensation -->
-    <div>
+    <!-- Compensation (as third ticket option) -->
+    <div class="space-y-2">
       <div class="flex items-center">
         <input 
-          type="checkbox" 
-          id="wantCompensation" 
-          name="wantCompensation" 
-          value="true"
-          <%= formData.wantCompensation ? 'checked' : '' %>
-          class="h-4 w-4 text-blue-600 focus:ring-blue-500 rounded"
+          type="radio" 
+          id="ticketCompensation" 
+          name="ticketOption" 
+          value="compensation"
+          <%= formData.ticketOption === 'compensation' ? 'checked' : '' %>
+          class="h-4 w-4 text-blue-600 focus:ring-blue-500"
         >
-        <label for="wantCompensation" class="ml-2 text-sm text-gray-700">Want Compensation Instead of Ticket</label>
+        <label for="ticketCompensation" class="ml-2 text-sm text-gray-700">Want Compensation Instead of Ticket</label>
       </div>
     </div>
   </div>
