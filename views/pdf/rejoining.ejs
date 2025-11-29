@@ -42,6 +42,7 @@
     .page {
       position: relative;
       z-index: 1;
+      min-height: 277mm; /* A4 height minus margins */
     }
 
     /* =========================
@@ -168,12 +169,16 @@
 
     .signature-item {
       font-weight: bold;
+      position: relative;
     }
 
     /* Footer */
     .footer-line {
+      position: fixed;
+      bottom: 5mm;
+      left: 15mm;
+      right: 15mm;
       border-top: 1px solid #000;
-      margin-top: 10mm;
       padding-top: 2mm;
       text-align: center;
       font-size: 10pt;
@@ -246,17 +251,17 @@
       <tr>
         <td class="row-num">8</td>
         <td class="row-label">TOTAL NO OF LEAVE</td>
-        <td class="row-value"><%= data.totalLeave || "" %></td>
+        <td class="row-value"><%= data.totalLeave || "" %><%= data.totalLeave ? (parseInt(data.totalLeave) === 1 ? ' day' : ' days') : '' %></td>
       </tr>
       <tr>
         <td class="row-num">9</td>
         <td class="row-label">ALLOWED LEAVE</td>
-        <td class="row-value"><%= data.allowedLeave || "" %></td>
+        <td class="row-value"><%= data.allowedLeave || "" %><%= data.allowedLeave ? (parseInt(data.allowedLeave) === 1 ? ' day' : ' days') : '' %></td>
       </tr>
       <tr>
         <td class="row-num">10</td>
         <td class="row-label">TOTAL EXTRA LEAVE TAKEN</td>
-        <td class="row-value"><%= data.extraLeave || "" %></td>
+        <td class="row-value"><%= data.extraLeave || "" %><%= data.extraLeave ? (parseInt(data.extraLeave) === 1 ? ' day' : ' days') : '' %></td>
       </tr>
       <tr>
         <td class="row-num">11</td>
@@ -291,7 +296,7 @@
         <div class="signature-item">
           SIGNATURE OF EMPLOYEE
           <% if (data.employeeSignature) { %>
-            <img src="<%= data.employeeSignature %>" alt="Employee Signature" style="max-height:40px; display:block; margin-top:4px;">
+            <img src="<%= data.employeeSignature %>" alt="Employee Signature" style="position:absolute; left:0; top:5mm; height:55px; max-width:70mm; object-fit:contain;">
           <% } %>
         </div>
       </div>
