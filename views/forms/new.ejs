@@ -22,8 +22,18 @@
       <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
         <form method="POST" action="/forms/<%= type %>">
           <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <% if (typeof strictRequired !== 'undefined' && strictRequired && Object.keys(errors || {}).length > 0) { %>
+            <div class="mb-4 p-4 rounded-lg bg-red-50 border border-red-200 text-red-700">
+              <p class="font-semibold">Cannot export PDF: please complete required fields.</p>
+              <ul class="list-disc ml-5 mt-2 text-sm">
+                <% Object.keys(errors).forEach(function(k) { %>
+                  <li><%= errors[k] %></li>
+                <% }) %>
+              </ul>
+            </div>
+          <% } %>
           
-          <%- include('partials/' + type.replace(/-/g, '_') + '_form', { formData, errors }) %>
+          <%- include('partials/' + type.replace(/-/g, '_') + '_form', { formData, errors, strictRequired }) %>
 
           <!-- Form Actions -->
           <div class="flex flex-col md:flex-row gap-3 mt-8 pt-6 border-t border-gray-200">

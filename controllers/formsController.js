@@ -95,8 +95,9 @@ exports.list = async (req, res) => {
       displayName: getDisplayName(type),
       applications: filteredApplications,
       filters: { search, from, to },
+      exportError: req.query.exportError === '1',
       csrfToken: req.csrfToken()
-    });
+    })
   } catch (error) {
     console.error('Error listing applications:', error);
     res.status(500).render('error', {
@@ -121,7 +122,8 @@ exports.newForm = (req, res) => {
     displayName: getDisplayName(type),
     csrfToken: req.csrfToken(),
     errors: {},
-    formData: {}
+    formData: {},
+    strictRequired: false
   });
 };
 
@@ -153,7 +155,9 @@ exports.editForm = async (req, res) => {
       application,
       csrfToken: req.csrfToken(),
       errors: {},
-      formData: parsedData
+      formData: parsedData,
+      strictRequired: false,
+      exportError: req.query.exportError === '1'
     });
   } catch (error) {
     console.error('Error loading application:', error);
@@ -178,7 +182,7 @@ exports.create = async (req, res) => {
     
     // Validate and sanitize form data
     const { action, ...formData } = req.body;
-    const { errors, validatedData } = validateFormData(type, formData);
+    const { errors, validatedData } = validateFormData(type, formData, { strict: action === 'export' });
 
     if (Object.keys(errors).length > 0) {
       return res.render('forms/new', {
@@ -187,7 +191,8 @@ exports.create = async (req, res) => {
         displayName: getDisplayName(type),
         csrfToken: req.csrfToken(),
         errors,
-        formData
+        formData,
+        strictRequired: action === 'export'
       });
     }
 
@@ -237,7 +242,7 @@ exports.update = async (req, res) => {
 
     // Validate and sanitize form data
     const { action, ...formData } = req.body;
-    const { errors, validatedData } = validateFormData(type, formData);
+    const { errors, validatedData } = validateFormData(type, formData, { strict: action === 'export' });
 
     if (Object.keys(errors).length > 0) {
       return res.render('forms/edit', {
@@ -247,7 +252,8 @@ exports.update = async (req, res) => {
         application: existing,
         csrfToken: req.csrfToken(),
         errors,
-        formData
+        formData,
+        strictRequired: action === 'export'
       });
     }
 
@@ -296,13 +302,42 @@ exports.exportPDF = async (req, res) => {
     // Parse JSON data
     const parsedData = typeof application.data === 'string' ? JSON.parse(application.data) : application.data;
 
+    // Validate strictly before exporting; if missing, redirect to edit with popup
+    const { errors } = validateFormData(type, parsedData, { strict: true });
+    if (Object.keys(errors).length > 0) {
+      // Redirect back to list with an error flag so the UI can show a toast
+      return res.redirect(`/forms/${type}?exportError=1`);
+    }
+
+    // Determine display name for filename
+    function getDisplayNameForFile(formType, data) {
+      let name = '';
+      if (formType === 'rejoining') {
+        name = data.name || '';
+      } else {
+        // leave-expats, leave-omani
+        name = data.employeeName || '';
+      }
+      // Fallback to ID if no name
+      if (!name || name.trim() === '') {
+        name = id;
+      }
+      // Sanitize filename: remove illegal characters
+      name = name.replace(/[^a-zA-Z0-9 _.-]/g, '').trim();
+      // Limit length
+      if (name.length > 80) name = name.slice(0, 80);
+      return name || id;
+    }
+    const displayNameForFile = getDisplayNameForFile(type, parsedData);
+
     // Generate PDF
     const pdfBuffer = await pdfService.generatePDF(type, parsedData);
 
-    // Set response headers for PDF download
+    // Set response headers for PDF download (type - name)
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${type}-${id}.pdf"`);
-    res.send(pdfBuffer);
+    res.setHeader('Content-Disposition', `attachment; filename="${type} - ${displayNameForFile}.pdf"`);
+    res.setHeader('Content-Length', Buffer.byteLength(pdfBuffer));
+    res.end(pdfBuffer);
   } catch (error) {
     console.error('Error generating PDF:', error);
     res.status(500).send('Failed to generate PDF');
@@ -310,7 +345,8 @@ exports.exportPDF = async (req, res) => {
 };
 
 // Validation helper
-function validateFormData(type, formData) {
+function validateFormData(type, formData, options = {}) {
+  const strict = options.strict === true;
   const errors = {};
   const validatedData = {};
 
@@ -328,7 +364,7 @@ function validateFormData(type, formData) {
       validatedData.wrokId = formData.wrokId.trim();
     }
 
-    // Optional fields
+    // Optional fields (strict: require all except signatures)
     validatedData.mobileNo = formData.mobileNo?.trim() || '';
     validatedData.designation = formData.designation?.trim() || '';
     validatedData.leaveType = formData.leaveType?.trim() || '';
@@ -339,6 +375,19 @@ function validateFormData(type, formData) {
     validatedData.extraLeave = formData.extraLeave ? parseInt(formData.extraLeave) : 0;
     validatedData.passportNo = formData.passportNo?.trim() || '';
     validatedData.passportHandedOver = formData.passportHandedOver?.trim() || '';
+
+    if (strict) {
+      if (!validatedData.mobileNo) errors.mobileNo = 'Mobile Number is required';
+      if (!validatedData.designation) errors.designation = 'Designation is required';
+      if (!validatedData.leaveType) errors.leaveType = 'Leave Type is required';
+      if (!validatedData.dateOfLeaving) errors.dateOfLeaving = 'Date of Leaving is required';
+      if (!validatedData.dateOfJoining) errors.dateOfJoining = 'Date of Joining is required';
+      if (!validatedData.totalLeave || validatedData.totalLeave <= 0) errors.totalLeave = 'Total Leave is required';
+      if (validatedData.allowedLeave < 0) errors.allowedLeave = 'Allowed Leave must be 0 or more';
+      if (validatedData.extraLeave < 0) errors.extraLeave = 'Extra Leave must be 0 or more';
+      if (!validatedData.passportNo) errors.passportNo = 'Passport No is required';
+      if (!validatedData.passportHandedOver) errors.passportHandedOver = 'Passport Handed Over is required';
+    }
     // Signatures
     validatedData.employeeSignature = formData.employeeSignature || '';
     validatedData.employeeSignatureDate = formData.employeeSignatureDate || '';
@@ -371,11 +420,25 @@ function validateFormData(type, formData) {
     validatedData.totalDays = formData.totalDays ? parseInt(formData.totalDays) : 0;
     validatedData.lastDayLeave = formData.lastDayLeave || '';
     validatedData.airportName = formData.airportName?.trim() || '';
-    validatedData.paymentAdvance = formData.paymentAdvance === 'true' || formData.paymentAdvance === true;
-    validatedData.paymentAfterReturn = formData.paymentAfterReturn === 'true' || formData.paymentAfterReturn === true;
-    validatedData.issueMyTicket = formData.issueMyTicket === 'true' || formData.issueMyTicket === true;
-    validatedData.issueTicketFamily = formData.issueTicketFamily === 'true' || formData.issueTicketFamily === true;
+    // New radio fields
+    validatedData.paymentOption = formData.paymentOption || '';
+    validatedData.ticketOption = formData.ticketOption || '';
+    // Checkbox remains
     validatedData.wantCompensation = formData.wantCompensation === 'true' || formData.wantCompensation === true;
+
+    if (strict) {
+      if (!validatedData.formDate) errors.formDate = 'Form Date is required';
+      if (!validatedData.position) errors.position = 'Position is required';
+      if (!validatedData.site) errors.site = 'Site is required';
+      if (!validatedData.mobileNo) errors.mobileNo = 'Mobile Number is required';
+      if (!validatedData.leaveType) errors.leaveType = 'Leave Type is required';
+      if (!validatedData.commenceLeave) errors.commenceLeave = 'Commence Leave is required';
+      if (!validatedData.totalDays || validatedData.totalDays <= 0) errors.totalDays = 'Total Days is required';
+      if (!validatedData.lastDayLeave) errors.lastDayLeave = 'Last Day of Leave is required';
+      if (!validatedData.airportName) errors.airportName = 'Airport Name is required';
+      if (!validatedData.paymentOption) errors.paymentOption = 'Payment Option is required';
+      if (!validatedData.ticketOption) errors.ticketOption = 'Ticket Option is required';
+    }
     // Signatures
     validatedData.employeeSignature = formData.employeeSignature || '';
     validatedData.employeeSignatureDate = formData.employeeSignatureDate || '';
@@ -407,6 +470,17 @@ function validateFormData(type, formData) {
     validatedData.commenceLeave = formData.commenceLeave || '';
     validatedData.totalDays = formData.totalDays ? parseInt(formData.totalDays) : 0;
     validatedData.lastDayLeave = formData.lastDayLeave || '';
+    
+    if (strict) {
+      if (!validatedData.formDate) errors.formDate = 'Form Date is required';
+      if (!validatedData.position) errors.position = 'Position is required';
+      if (!validatedData.site) errors.site = 'Site is required';
+      if (!validatedData.mobileNo) errors.mobileNo = 'Mobile Number is required';
+      if (!validatedData.leaveType) errors.leaveType = 'Leave Type is required';
+      if (!validatedData.commenceLeave) errors.commenceLeave = 'Commence Leave is required';
+      if (!validatedData.totalDays || validatedData.totalDays <= 0) errors.totalDays = 'Total Days is required';
+      if (!validatedData.lastDayLeave) errors.lastDayLeave = 'Last Day of Leave is required';
+    }
     // Signatures
     validatedData.employeeSignature = formData.employeeSignature || '';
     validatedData.employeeSignatureDate = formData.employeeSignatureDate || '';

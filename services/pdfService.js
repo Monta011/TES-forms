@@ -24,11 +24,19 @@ async function generatePDF(type, data) {
 
     // Render EJS template to HTML
     const templatePath = path.join(__dirname, '../views/pdf', templateFile);
-    const html = await ejs.renderFile(templatePath, { data });
+    let html = await ejs.renderFile(templatePath, { data });
+
+    // Ensure relative assets like /images/... load by adding a base URL
+    const baseUrl = process.env.PDF_BASE_URL || 'http://localhost:3000';
+    if (html.includes('<head')) {
+      html = html.replace('<head>', `<head><base href="${baseUrl}">`);
+    } else {
+      html = `<base href="${baseUrl}">` + html;
+    }
 
     // Launch Puppeteer
     const browser = await puppeteer.launch({
-      headless: 'new',
+      headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
 
@@ -38,11 +46,13 @@ async function generatePDF(type, data) {
     await page.setContent(html, {
       waitUntil: ['networkidle0', 'load']
     });
+    await page.emulateMediaType('screen');
 
     // Generate PDF with A4 format
     const pdfBuffer = await page.pdf({
       format: 'A4',
       printBackground: true,
+      preferCSSPageSize: true,
       margin: {
         top: '0mm',
         right: '0mm',

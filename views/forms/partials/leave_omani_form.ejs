@@ -43,7 +43,8 @@
 
       <!-- Form Date -->
       <div>
-        <label for="formDate" class="block text-sm font-medium text-gray-700 mb-1">Form Date</label>
+        <label for="formDate" class="block text-sm font-medium text-gray-700 mb-1">Form Date <% if (strictRequired) { %><span class="text-red-500">*</span><% } %></label>
+          <% if (errors.formDate) { %><p class="text-red-500 text-sm mt-1"><%= errors.formDate %></p><% } %>
         <input 
           type="date" 
           id="formDate" 
@@ -55,7 +56,8 @@
 
       <!-- Position -->
       <div>
-        <label for="position" class="block text-sm font-medium text-gray-700 mb-1">Position</label>
+        <label for="position" class="block text-sm font-medium text-gray-700 mb-1">Position <% if (strictRequired) { %><span class="text-red-500">*</span><% } %></label>
+          <% if (errors.position) { %><p class="text-red-500 text-sm mt-1"><%= errors.position %></p><% } %>
         <input 
           type="text" 
           id="position" 
@@ -67,7 +69,8 @@
 
       <!-- Site -->
       <div>
-        <label for="site" class="block text-sm font-medium text-gray-700 mb-1">Site</label>
+        <label for="site" class="block text-sm font-medium text-gray-700 mb-1">Site <% if (strictRequired) { %><span class="text-red-500">*</span><% } %></label>
+          <% if (errors.site) { %><p class="text-red-500 text-sm mt-1"><%= errors.site %></p><% } %>
         <input 
           type="text" 
           id="site" 
@@ -79,7 +82,8 @@
 
       <!-- Mobile Number -->
       <div>
-        <label for="mobileNo" class="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
+        <label for="mobileNo" class="block text-sm font-medium text-gray-700 mb-1">Mobile Number <% if (strictRequired) { %><span class="text-red-500">*</span><% } %></label>
+          <% if (errors.mobileNo) { %><p class="text-red-500 text-sm mt-1"><%= errors.mobileNo %></p><% } %>
         <input 
           type="tel" 
           id="mobileNo" 
@@ -98,7 +102,8 @@
     
     <!-- Leave Type -->
     <div class="mb-4">
-      <label class="block text-sm font-medium text-gray-700 mb-2">Leave Type</label>
+      <label class="block text-sm font-medium text-gray-700 mb-2">Leave Type <% if (strictRequired) { %><span class="text-red-500">*</span><% } %></label>
+        <% if (errors.leaveType) { %><p class="text-red-500 text-sm mt-1"><%= errors.leaveType %></p><% } %>
       <div class="space-y-2">
         <div class="flex items-center">
           <input 
@@ -183,7 +188,8 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <!-- Commence Leave -->
       <div>
-        <label for="commenceLeave" class="block text-sm font-medium text-gray-700 mb-1">Commence Leave</label>
+        <label for="commenceLeave" class="block text-sm font-medium text-gray-700 mb-1">Commence Leave <% if (strictRequired) { %><span class="text-red-500">*</span><% } %></label>
+          <% if (errors.commenceLeave) { %><p class="text-red-500 text-sm mt-1"><%= errors.commenceLeave %></p><% } %>
         <input 
           type="date" 
           id="commenceLeave" 
@@ -193,27 +199,29 @@
         >
       </div>
 
+      <!-- Last Day of Leave -->
+      <div>
+        <label for="lastDayLeave" class="block text-sm font-medium text-gray-700 mb-1">Last Day of Leave <% if (strictRequired) { %><span class="text-red-500">*</span><% } %></label>
+          <% if (errors.lastDayLeave) { %><p class="text-red-500 text-sm mt-1"><%= errors.lastDayLeave %></p><% } %>
+        <input 
+          type="date" 
+          id="lastDayLeave" 
+          name="lastDayLeave" 
+          value="<%= formData.lastDayLeave || '' %>"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+      </div>
+
       <!-- Total Days -->
       <div>
-        <label for="totalDays" class="block text-sm font-medium text-gray-700 mb-1">Total Days</label>
+        <label for="totalDays" class="block text-sm font-medium text-gray-700 mb-1">Total Days <% if (strictRequired) { %><span class="text-red-500">*</span><% } %></label>
+          <% if (errors.totalDays) { %><p class="text-red-500 text-sm mt-1"><%= errors.totalDays %></p><% } %>
         <input 
           type="number" 
           id="totalDays" 
           name="totalDays" 
           value="<%= formData.totalDays || '' %>"
           min="0"
-          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        >
-      </div>
-
-      <!-- Last Day of Leave -->
-      <div>
-        <label for="lastDayLeave" class="block text-sm font-medium text-gray-700 mb-1">Last Day of Leave</label>
-        <input 
-          type="date" 
-          id="lastDayLeave" 
-          name="lastDayLeave" 
-          value="<%= formData.lastDayLeave || '' %>"
           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         >
       </div>
@@ -256,3 +264,63 @@
     }) %>
   </div>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const commence = document.getElementById('commenceLeave');
+    const lastDay = document.getElementById('lastDayLeave');
+    const totalDays = document.getElementById('totalDays');
+
+    function parseDate(val) {
+      return val ? new Date(val + 'T00:00:00') : null;
+    }
+
+    function formatISO(date) {
+      if (!date) return '';
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function daysBetweenInclusive(start, end) {
+      if (!start || !end) return '';
+      const ms = end - start;
+      const days = Math.floor(ms / (1000 * 60 * 60 * 24)) + 1;
+      return days > 0 ? days : '';
+    }
+
+    function updateTotalDaysFromDates() {
+      const start = parseDate(commence.value);
+      const end = parseDate(lastDay.value);
+      const days = daysBetweenInclusive(start, end);
+      totalDays.value = days === '' ? '' : days;
+    }
+
+    function updateLastDayFromTotal() {
+      const start = parseDate(commence.value);
+      const days = parseInt(totalDays.value, 10);
+      if (start && Number.isFinite(days) && days > 0) {
+        const end = new Date(start);
+        end.setDate(end.getDate() + (days - 1));
+        lastDay.value = formatISO(end);
+      }
+    }
+
+    commence.addEventListener('change', function() {
+      if (totalDays.value) {
+        updateLastDayFromTotal();
+      } else {
+        updateTotalDaysFromDates();
+      }
+    });
+    lastDay.addEventListener('change', updateTotalDaysFromDates);
+    totalDays.addEventListener('input', updateLastDayFromTotal);
+
+    if (commence.value && lastDay.value) {
+      updateTotalDaysFromDates();
+    } else if (commence.value && totalDays.value) {
+      updateLastDayFromTotal();
+    }
+  });
+</script>

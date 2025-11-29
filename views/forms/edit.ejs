@@ -10,6 +10,17 @@
   <%- include('../partials/navbar') %>
   
   <main class="flex-grow container mx-auto px-4 py-8">
+    <% if (typeof exportError !== 'undefined' && exportError) { %>
+      <div id="export-error-toast" class="fixed top-4 left-1/2 -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded shadow-lg z-50">
+        Form is missing some fields. Click Edit to fill them.
+      </div>
+      <script>
+        setTimeout(function(){
+          var el = document.getElementById('export-error-toast');
+          if (el) el.remove();
+        }, 5000);
+      </script>
+    <% } %>
     <div class="max-w-4xl mx-auto">
       <!-- Header -->
       <div class="mb-6">
@@ -22,8 +33,18 @@
       <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
         <form method="POST" action="/forms/<%= type %>/<%= application.id %>">
           <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <% if (typeof strictRequired !== 'undefined' && strictRequired && Object.keys(errors || {}).length > 0) { %>
+            <div class="mb-4 p-4 rounded-lg bg-red-50 border border-red-200 text-red-700">
+              <p class="font-semibold">Cannot export PDF: please complete required fields.</p>
+              <ul class="list-disc ml-5 mt-2 text-sm">
+                <% Object.keys(errors).forEach(function(k) { %>
+                  <li><%= errors[k] %></li>
+                <% }) %>
+              </ul>
+            </div>
+          <% } %>
           
-          <%- include('partials/' + type.replace(/-/g, '_') + '_form', { formData, errors }) %>
+          <%- include('partials/' + type.replace(/-/g, '_') + '_form', { formData, errors, strictRequired }) %>
 
           <!-- Form Actions -->
           <div class="flex flex-col md:flex-row gap-3 mt-8 pt-6 border-t border-gray-200">

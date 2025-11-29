@@ -43,7 +43,8 @@
 
       <!-- Mobile Number -->
       <div>
-        <label for="mobileNo" class="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
+        <label for="mobileNo" class="block text-sm font-medium text-gray-700 mb-1">Mobile Number <% if (strictRequired) { %><span class="text-red-500">*</span><% } %></label>
+          <% if (errors.mobileNo) { %><p class="text-red-500 text-sm mt-1"><%= errors.mobileNo %></p><% } %>
         <input 
           type="tel" 
           id="mobileNo" 
@@ -55,7 +56,8 @@
 
       <!-- Designation -->
       <div>
-        <label for="designation" class="block text-sm font-medium text-gray-700 mb-1">Designation</label>
+        <label for="designation" class="block text-sm font-medium text-gray-700 mb-1">Designation <% if (strictRequired) { %><span class="text-red-500">*</span><% } %></label>
+          <% if (errors.designation) { %><p class="text-red-500 text-sm mt-1"><%= errors.designation %></p><% } %>
         <input 
           type="text" 
           id="designation" 
@@ -74,7 +76,8 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <!-- Leave Type -->
       <div>
-        <label for="leaveType" class="block text-sm font-medium text-gray-700 mb-1">Leave Type</label>
+        <label for="leaveType" class="block text-sm font-medium text-gray-700 mb-1">Leave Type <% if (strictRequired) { %><span class="text-red-500">*</span><% } %></label>
+          <% if (errors.leaveType) { %><p class="text-red-500 text-sm mt-1"><%= errors.leaveType %></p><% } %>
         <input 
           type="text" 
           id="leaveType" 
@@ -87,7 +90,8 @@
 
       <!-- Date of Leaving -->
       <div>
-        <label for="dateOfLeaving" class="block text-sm font-medium text-gray-700 mb-1">Date of Leaving</label>
+        <label for="dateOfLeaving" class="block text-sm font-medium text-gray-700 mb-1">Date of Leaving <% if (strictRequired) { %><span class="text-red-500">*</span><% } %></label>
+          <% if (errors.dateOfLeaving) { %><p class="text-red-500 text-sm mt-1"><%= errors.dateOfLeaving %></p><% } %>
         <input 
           type="date" 
           id="dateOfLeaving" 
@@ -99,7 +103,8 @@
 
       <!-- Date of Joining -->
       <div>
-        <label for="dateOfJoining" class="block text-sm font-medium text-gray-700 mb-1">Date of Joining</label>
+        <label for="dateOfJoining" class="block text-sm font-medium text-gray-700 mb-1">Date of Joining <% if (strictRequired) { %><span class="text-red-500">*</span><% } %></label>
+          <% if (errors.dateOfJoining) { %><p class="text-red-500 text-sm mt-1"><%= errors.dateOfJoining %></p><% } %>
         <input 
           type="date" 
           id="dateOfJoining" 
@@ -111,14 +116,16 @@
 
       <!-- Total Leave -->
       <div>
-        <label for="totalLeave" class="block text-sm font-medium text-gray-700 mb-1">Total Leave (days)</label>
+        <label for="totalLeave" class="block text-sm font-medium text-gray-700 mb-1">Total Leave (days) <% if (strictRequired) { %><span class="text-red-500">*</span><% } %></label>
+          <% if (errors.totalLeave) { %><p class="text-red-500 text-sm mt-1"><%= errors.totalLeave %></p><% } %>
         <input 
           type="number" 
           id="totalLeave" 
           name="totalLeave" 
           value="<%= formData.totalLeave || '' %>"
           min="0"
-          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          readonly
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         >
       </div>
 
@@ -157,7 +164,8 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <!-- Passport Number -->
       <div>
-        <label for="passportNo" class="block text-sm font-medium text-gray-700 mb-1">Passport Number</label>
+        <label for="passportNo" class="block text-sm font-medium text-gray-700 mb-1">Passport Number <% if (strictRequired) { %><span class="text-red-500">*</span><% } %></label>
+          <% if (errors.passportNo) { %><p class="text-red-500 text-sm mt-1"><%= errors.passportNo %></p><% } %>
         <input 
           type="text" 
           id="passportNo" 
@@ -169,7 +177,8 @@
 
       <!-- Passport Handed Over -->
       <div>
-        <label for="passportHandedOver" class="block text-sm font-medium text-gray-700 mb-1">Passport Handed Over</label>
+        <label for="passportHandedOver" class="block text-sm font-medium text-gray-700 mb-1">Passport Handed Over <% if (strictRequired) { %><span class="text-red-500">*</span><% } %></label>
+          <% if (errors.passportHandedOver) { %><p class="text-red-500 text-sm mt-1"><%= errors.passportHandedOver %></p><% } %>
         <select 
           id="passportHandedOver" 
           name="passportHandedOver"
@@ -183,5 +192,90 @@
     </div>
   </div>
 
-  <!-- Re-Joining form: No signatures required -->
+  <!-- Signature Section -->
+  <div class="bg-gray-50 p-4 rounded-lg">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4">Signature</h3>
+    <%- include('signature_block', {
+      title: 'Employee to sign',
+      subtitle: 'I declare this to be a true and accurate record of my absence.',
+      idPrefix: 'employeeSignature',
+      fieldName: 'employeeSignature',
+      dateFieldName: 'employeeSignatureDate',
+      formData,
+      errors
+    }) %>
+  </div>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const dateOfLeaving = document.getElementById('dateOfLeaving');
+    const dateOfJoining = document.getElementById('dateOfJoining');
+    const totalLeave = document.getElementById('totalLeave');
+    const allowedLeave = document.getElementById('allowedLeave');
+    const extraLeave = document.getElementById('extraLeave');
+
+    // Calculate days between two dates
+    function calculateDaysBetween(startDate, endDate) {
+      if (!startDate || !endDate) return 0;
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const diffTime = Math.abs(end - start);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays;
+    }
+
+    // Update Total Leave when dates change
+    function updateTotalLeave() {
+      const leaving = dateOfLeaving.value;
+      const joining = dateOfJoining.value;
+      
+      if (leaving && joining) {
+        const days = calculateDaysBetween(leaving, joining);
+        totalLeave.value = days;
+        
+        // Recalculate Extra Leave if Allowed Leave has a value
+        if (allowedLeave.value) {
+          updateExtraLeave();
+        }
+      } else {
+        totalLeave.value = '';
+      }
+    }
+
+    // Update Extra Leave based on Total Leave and Allowed Leave
+    function updateExtraLeave() {
+      const total = parseInt(totalLeave.value) || 0;
+      const allowed = parseInt(allowedLeave.value) || 0;
+      
+      if (totalLeave.value && allowedLeave.value) {
+        const extra = total - allowed;
+        extraLeave.value = extra >= 0 ? extra : 0;
+      }
+    }
+
+    // Update Allowed Leave based on Total Leave and Extra Leave
+    function updateAllowedLeave() {
+      const total = parseInt(totalLeave.value) || 0;
+      const extra = parseInt(extraLeave.value) || 0;
+      
+      if (totalLeave.value && extraLeave.value) {
+        const allowed = total - extra;
+        allowedLeave.value = allowed >= 0 ? allowed : 0;
+      }
+    }
+
+    // Event listeners for date fields
+    dateOfLeaving.addEventListener('change', updateTotalLeave);
+    dateOfJoining.addEventListener('change', updateTotalLeave);
+
+    // Event listeners for leave days
+    allowedLeave.addEventListener('input', updateExtraLeave);
+    extraLeave.addEventListener('input', updateAllowedLeave);
+
+    // Initial calculation on page load (for edit mode)
+    if (dateOfLeaving.value && dateOfJoining.value) {
+      updateTotalLeave();
+    }
+  });
+</script>

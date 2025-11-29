@@ -10,6 +10,17 @@
   <%- include('../partials/navbar') %>
   
   <main class="flex-grow container mx-auto px-4 py-8">
+    <% if (typeof exportError !== 'undefined' && exportError) { %>
+      <div id="export-error-toast" class="fixed top-20 left-1/2 -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded shadow-lg z-50">
+        Form is missing some fields. Please edit and complete required items.
+      </div>
+      <script>
+        setTimeout(function(){
+          var el = document.getElementById('export-error-toast');
+          if (el) el.remove();
+        }, 5000);
+      </script>
+    <% } %>
     <div class="max-w-7xl mx-auto">
   <!-- Header -->
   <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
