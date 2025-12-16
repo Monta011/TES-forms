@@ -1,6 +1,24 @@
 const puppeteer = require('puppeteer');
 const ejs = require('ejs');
 const path = require('path');
+const fs = require('fs').promises;
+
+/**
+ * Convert image to base64
+ * @param {string} imagePath - Path to image file
+ * @returns {Promise<string>} Base64 data URL
+ */
+async function imageToBase64(imagePath) {
+  try {
+    const imageBuffer = await fs.readFile(imagePath);
+    const ext = path.extname(imagePath).toLowerCase();
+    const mimeType = ext === '.png' ? 'image/png' : ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 'image/png';
+    return `data:${mimeType};base64,${imageBuffer.toString('base64')}`;
+  } catch (error) {
+    console.error(`Error reading image ${imagePath}:`, error);
+    return '';
+  }
+}
 
 /**
  * Generate PDF from EJS template
@@ -22,17 +40,13 @@ async function generatePDF(type, data) {
       throw new Error(`Invalid form type: ${type}`);
     }
 
-    // Render EJS template to HTML
-    const templatePath = path.join(__dirname, '../views/pdf', templateFile);
-    let html = await ejs.renderFile(templatePath, { data });
+    // Convert logo to base64
+    const logoPath = path.join(__dirname, '../public/images/Picture.png');
+    const logoBase64 = await imageToBase64(logoPath);
 
-    // Ensure relative assets like /images/... load by adding a base URL
-    const baseUrl = process.env.PDF_BASE_URL || 'http://localhost:3000';
-    if (html.includes('<head')) {
-      html = html.replace('<head>', `<head><base href="${baseUrl}">`);
-    } else {
-      html = `<base href="${baseUrl}">` + html;
-    }
+    // Render EJS template to HTML with logo as base64
+    const templatePath = path.join(__dirname, '../views/pdf', templateFile);
+    let html = await ejs.renderFile(templatePath, { data, logoBase64 });
 
     // Launch Puppeteer with cache configuration
     const browser = await puppeteer.launch({
@@ -41,18 +55,22 @@ async function generatePDF(type, data) {
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
-        '--disable-gpu'
+        '--disable-gpu',
+        '--font-render-hinting=none'
       ],
       executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || puppeteer.executablePath()
     });
 
     const page = await browser.newPage();
     
-    // Set content and wait for images/fonts to load
+    // Set content and wait for everything to load
     await page.setContent(html, {
-      waitUntil: ['networkidle0', 'load']
+      waitUntil: ['load', 'domcontentloaded', 'networkidle0']
     });
-    await page.emulateMediaType('screen');
+    
+    // Wait a bit more for fonts to render
+    await page.evaluateHandle('document.fonts.ready');
+    await page.emulateMediaType('print');
 
     // Generate PDF with A4 format
     const pdfBuffer = await page.pdf({
