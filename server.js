@@ -69,7 +69,19 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
   console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+  
+  // Test database connection
+  try {
+    const { PrismaClient } = require('@prisma/client');
+    const prisma = new PrismaClient();
+    await prisma.$connect();
+    console.log('✅ Database connected successfully');
+    await prisma.$disconnect();
+  } catch (error) {
+    console.error('❌ Database connection failed:', error.message);
+    console.error('Check DATABASE_URL environment variable');
+  }
 });
