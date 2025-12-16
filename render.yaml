@@ -1,0 +1,48 @@
+services:
+  # Web Service
+  - type: web
+    name: tes-forms
+    env: node
+    region: oregon # Change to your preferred region
+    plan: free
+    buildCommand: npm install && npm run build && npx prisma migrate deploy
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: tes-forms-db
+          property: connectionString
+      - key: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD
+        value: true
+      - key: PUPPETEER_EXECUTABLE_PATH
+        value: /usr/bin/chromium-browser
+    # Install Chrome dependencies for Puppeteer
+    preDeployCommand: |
+      apt-get update && apt-get install -y \
+        chromium \
+        chromium-sandbox \
+        fonts-liberation \
+        libasound2 \
+        libatk-bridge2.0-0 \
+        libatk1.0-0 \
+        libcups2 \
+        libdbus-1-3 \
+        libdrm2 \
+        libgbm1 \
+        libgtk-3-0 \
+        libnspr4 \
+        libnss3 \
+        libx11-xcb1 \
+        libxcomposite1 \
+        libxdamage1 \
+        libxrandr2 \
+        xdg-utils
+
+databases:
+  # PostgreSQL Database
+  - name: tes-forms-db
+    databaseName: tes_forms
+    plan: free
+    region: oregon # Same region as web service for low latency

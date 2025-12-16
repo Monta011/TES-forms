@@ -56,7 +56,9 @@ Public-facing web application for digitizing 3 company application forms: Re-Joi
 
 - `npm start` - Start production server
 - `npm run dev` - Start development server with auto-reload
-- `npm run prisma:migrate` - Run database migrations
+- `npm run build` - Production build (generates Prisma client + configures Puppeteer)
+- `npm run prisma:migrate` - Run database migrations (development)
+- `npm run prisma:deploy` - Apply migrations (production)
 - `npm run prisma:generate` - Regenerate Prisma client
 - `npm run prisma:studio` - Open Prisma Studio (database GUI)
 
@@ -106,12 +108,31 @@ TES-forms/
 
 ## Deployment
 
+### Quick Deploy to Render (Free)
+
+See [RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md) for complete guide.
+
+**Quick Steps:**
+1. Push code to GitHub
+2. Go to [Render Dashboard](https://dashboard.render.com)
+3. Create "New Blueprint" → Connect repository
+4. Render auto-detects `render.yaml` and provisions:
+   - Web service with Puppeteer support
+   - PostgreSQL database (1 GB free)
+5. Set environment variables (DATABASE_URL copied from database)
+6. Deploy (automatic migrations included)
+
+**Your app will be live at:** `https://your-app-name.onrender.com`
+
+### Manual Deployment (Any Host)
+
 1. Set `DATABASE_URL` in production environment
-2. Run `npx prisma migrate deploy`
-3. Ensure Puppeteer dependencies (Chrome) are installed in container
-4. Verify logo image exists at `/public/images/Picture.png`
-5. Set `NODE_ENV=production`
-6. Start server: `npm start`
+2. Install Chromium dependencies for Puppeteer
+3. Run `npm run build` (generates Prisma client)
+4. Run `npx prisma migrate deploy` (apply migrations)
+5. Verify logo image exists at `/public/images/Picture.png`
+6. Set `NODE_ENV=production`
+7. Start server: `npm start`
 
 ## License
 
