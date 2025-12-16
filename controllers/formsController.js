@@ -53,14 +53,8 @@ exports.list = async (req, res) => {
       orderBy: { createdAt: 'desc' }
     });
 
-    // Parse JSON data for each application
-    const parsedApplications = applications.map(app => ({
-      ...app,
-      data: typeof app.data === 'string' ? JSON.parse(app.data) : app.data
-    }));
-
-    // Filter in memory for search and dates since SQLite doesn't support JSON queries
-    let filteredApplications = parsedApplications;
+    // PostgreSQL returns native JSON objects, no parsing needed
+    let filteredApplications = applications;
     
     if (search) {
       filteredApplications = filteredApplications.filter(app => {
@@ -145,8 +139,8 @@ exports.editForm = async (req, res) => {
       return res.status(404).render('404', { title: 'Application Not Found' });
     }
 
-    // Parse JSON data
-    const parsedData = typeof application.data === 'string' ? JSON.parse(application.data) : application.data;
+    // PostgreSQL returns native JSON objects
+    const parsedData = application.data;
 
     res.render('forms/edit', {
       title: `Edit ${getDisplayName(type)}`,
@@ -200,7 +194,7 @@ exports.create = async (req, res) => {
     const application = await prisma.application.create({
       data: {
         type: dbType,
-        data: JSON.stringify(validatedData)
+        data: validatedData
       }
     });
 
@@ -261,7 +255,7 @@ exports.update = async (req, res) => {
     await prisma.application.update({
       where: { id },
       data: {
-        data: JSON.stringify(validatedData)
+        data: validatedData
       }
     });
 
@@ -299,8 +293,8 @@ exports.exportPDF = async (req, res) => {
       return res.status(404).send('Application not found');
     }
 
-    // Parse JSON data
-    const parsedData = typeof application.data === 'string' ? JSON.parse(application.data) : application.data;
+    // PostgreSQL returns native JSON objects
+    const parsedData = application.data;
 
     // Validate strictly before exporting; if missing, redirect to edit with popup
     const { errors } = validateFormData(type, parsedData, { strict: true });
