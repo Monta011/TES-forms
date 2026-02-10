@@ -10,36 +10,66 @@ const { execSync } = require('child_process');
  * @returns {string|null} Path to Chrome or null
  */
 function findChromeExecutable() {
+  console.log('🔍 Looking for Chrome executable...');
+  console.log('Environment:', {
+    PUPPETEER_EXECUTABLE_PATH: process.env.PUPPETEER_EXECUTABLE_PATH,
+    PUPPETEER_CACHE_DIR: process.env.PUPPETEER_CACHE_DIR,
+    NODE_ENV: process.env.NODE_ENV,
+    PWD: process.cwd()
+  });
+
   // If explicitly set, use it
   if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+    console.log('✅ Using PUPPETEER_EXECUTABLE_PATH:', process.env.PUPPETEER_EXECUTABLE_PATH);
     return process.env.PUPPETEER_EXECUTABLE_PATH;
   }
 
   // Try Puppeteer's default
   try {
-    return puppeteer.executablePath();
+    const defaultPath = puppeteer.executablePath();
+    console.log('✅ Using Puppeteer default path:', defaultPath);
+    return defaultPath;
   } catch (e) {
+    console.warn('⚠️  Puppeteer default path failed:', e.message);
+    
     // If that fails, try to find Chrome in Puppeteer cache (Render)
     const cacheDir = process.env.PUPPETEER_CACHE_DIR || path.join(process.cwd(), '.cache', 'puppeteer');
+    console.log('🔍 Searching in cache directory:', cacheDir);
     
     if (existsSync(cacheDir)) {
       try {
         // Find chrome executable in cache directory
         const findCommand = process.platform === 'win32' 
           ? `dir /s /b "${cacheDir}\\chrome.exe"` 
-          : `find "${cacheDir}" -name chrome -type f 2>/dev/null | grep -E "chrome-linux64?/chrome$" | head -n 1`;
+          : `find "${cacheDir}" -type f -name "chrome" 2>/dev/null | head -n 1`;
         
+        console.log('Running command:', findCommand);
         const chromePath = execSync(findCommand, { encoding: 'utf8' }).trim();
+        
         if (chromePath && existsSync(chromePath)) {
-          console.log('Found Chrome at:', chromePath);
+          console.log('✅ Found Chrome at:', chromePath);
           return chromePath;
+        } else {
+          console.warn('⚠️  Chrome path not found or does not exist:', chromePath);
         }
       } catch (err) {
-        console.warn('Could not find Chrome in cache:', err.message);
+        console.error('❌ Could not find Chrome in cache:', err.message);
+        
+        // List cache directory contents for debugging
+        try {
+          const lsCommand = `ls -la "${cacheDir}" 2>/dev/null || echo "Cache dir not accessible"`;
+          const dirContents = execSync(lsCommand, { encoding: 'utf8' });
+          console.log('📁 Cache directory contents:', dirContents);
+        } catch (lsErr) {
+          console.error('Could not list cache directory');
+        }
       }
+    } else {
+      console.error('❌ Cache directory does not exist:', cacheDir);
     }
   }
 
+  console.error('❌ No Chrome executable found');
   return null;
 }
 
@@ -91,8 +121,12 @@ async function generatePDF(type, data) {
     // Find Chrome executable
     const executablePath = findChromeExecutable();
     if (!executablePath) {
-      throw new Error('Chrome executable not found. Make sure Puppeteer is installed correctly.');
+      const errorMsg = 'Chrome executable not found. Puppeteer installation may have failed during build.';
+      console.error('❌', errorMsg);
+      throw new Error(errorMsg);
     }
+
+    console.log('🚀 Launching Puppeteer with Chrome at:', executablePath);
 
     // Launch Puppeteer with cache configuration
     const browser = await puppeteer.launch({
@@ -106,6 +140,8 @@ async function generatePDF(type, data) {
       ],
       executablePath
     });
+
+    console.log('✅ Browser launched successfully');
 
     const page = await browser.newPage();
     
@@ -133,9 +169,14 @@ async function generatePDF(type, data) {
 
     await browser.close();
 
+    console.log('✅ PDF generated successfully, size:', pdfBuffer.length, 'bytes');
     return pdfBuffer;
   } catch (error) {
-    console.error('PDF generation error:', error);
+    console.error('❌ PDF generation error:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     throw new Error(`Failed to generate PDF: ${error.message}`);
   }
 }
