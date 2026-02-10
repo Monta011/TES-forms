@@ -6,7 +6,7 @@ Public-facing web application for digitizing 3 company application forms: Re-Joi
 
 - **Backend:** Node.js + Express.js
 - **View Engine:** EJS (server-rendered)
-- **Database:** PostgreSQL with Prisma ORM
+- **Database:** PostgreSQL (Supabase) with Prisma ORM
 - **PDF Generation:** Puppeteer
 - **Styling:** Tailwind CSS (CDN)
 
@@ -34,9 +34,15 @@ Public-facing web application for digitizing 3 company application forms: Re-Joi
    ```bash
    cp .env.example .env
    ```
-   Edit `.env` and set your PostgreSQL connection string:
+   Edit `.env` and set your PostgreSQL connection strings:
+   ```
+   DATABASE_URL="postgresql://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres?pgbouncer=true"
+   DIRECT_URL="postgresql://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres"
+   ```
+   Or for local PostgreSQL:
    ```
    DATABASE_URL="postgresql://username:password@localhost:5432/tes_forms?schema=public"
+   DIRECT_URL="postgresql://username:password@localhost:5432/tes_forms?schema=public"
    ```
 
 4. **Run database migrations**
@@ -108,18 +114,18 @@ TES-forms/
 
 ## Deployment
 
-### Quick Deploy to Render (Free)
+### Quick Deploy: Render (App) + Supabase (Database)
 
-See [RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md) for complete guide.
+See [RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md) for the complete guide.
 
 **Quick Steps:**
-1. Push code to GitHub
-2. Go to [Render Dashboard](https://dashboard.render.com)
-3. Create "New Blueprint" → Connect repository
-4. Render auto-detects `render.yaml` and provisions:
-   - Web service with Puppeteer support
-   - PostgreSQL database (1 GB free)
-5. Set environment variables (DATABASE_URL copied from database)
+1. Create a [Supabase](https://supabase.com) project (free) → copy connection strings
+2. Push code to GitHub
+3. Go to [Render Dashboard](https://dashboard.render.com)
+4. Create "New Blueprint" → Connect repository
+5. Set environment variables:
+   - `DATABASE_URL` → Supabase pooled connection (port 6543)
+   - `DIRECT_URL` → Supabase direct connection (port 5432)
 6. Deploy (automatic migrations included)
 
 **Your app will be live at:** `https://your-app-name.onrender.com`

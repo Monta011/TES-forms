@@ -2,6 +2,46 @@ const puppeteer = require('puppeteer');
 const ejs = require('ejs');
 const path = require('path');
 const fs = require('fs').promises;
+const { existsSync } = require('fs');
+const { execSync } = require('child_process');
+
+/**
+ * Find Chrome executable (for Render deployment)
+ * @returns {string|null} Path to Chrome or null
+ */
+function findChromeExecutable() {
+  // If explicitly set, use it
+  if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+    return process.env.PUPPETEER_EXECUTABLE_PATH;
+  }
+
+  // Try Puppeteer's default
+  try {
+    return puppeteer.executablePath();
+  } catch (e) {
+    // If that fails, try to find Chrome in Puppeteer cache (Render)
+    const cacheDir = process.env.PUPPETEER_CACHE_DIR || path.join(process.cwd(), '.cache', 'puppeteer');
+    
+    if (existsSync(cacheDir)) {
+      try {
+        // Find chrome executable in cache directory
+        const findCommand = process.platform === 'win32' 
+          ? `dir /s /b "${cacheDir}\\chrome.exe"` 
+          : `find "${cacheDir}" -name chrome -type f 2>/dev/null | grep -E "chrome-linux64?/chrome$" | head -n 1`;
+        
+        const chromePath = execSync(findCommand, { encoding: 'utf8' }).trim();
+        if (chromePath && existsSync(chromePath)) {
+          console.log('Found Chrome at:', chromePath);
+          return chromePath;
+        }
+      } catch (err) {
+        console.warn('Could not find Chrome in cache:', err.message);
+      }
+    }
+  }
+
+  return null;
+}
 
 /**
  * Convert image to base64
@@ -48,6 +88,12 @@ async function generatePDF(type, data) {
     const templatePath = path.join(__dirname, '../views/pdf', templateFile);
     let html = await ejs.renderFile(templatePath, { data, logoBase64 });
 
+    // Find Chrome executable
+    const executablePath = findChromeExecutable();
+    if (!executablePath) {
+      throw new Error('Chrome executable not found. Make sure Puppeteer is installed correctly.');
+    }
+
     // Launch Puppeteer with cache configuration
     const browser = await puppeteer.launch({
       headless: true,
@@ -58,7 +104,7 @@ async function generatePDF(type, data) {
         '--disable-gpu',
         '--font-render-hinting=none'
       ],
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || puppeteer.executablePath()
+      executablePath
     });
 
     const page = await browser.newPage();

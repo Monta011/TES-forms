@@ -23,6 +23,34 @@ const getDisplayName = (type) => {
   return names[type] || type;
 };
 
+// Validate signature size (limit to 500KB base64)
+const validateSignature = (signature) => {
+  if (!signature) return null;
+  
+  // Check if it's a valid data URI
+  if (!signature.startsWith('data:image/')) {
+    return 'Invalid signature format';
+  }
+  
+  // Check size (base64 length ≈ file size * 1.33)
+  const maxSize = 500 * 1024; // 500KB
+  if (signature.length > maxSize) {
+    return 'Signature file is too large (max 500KB)';
+  }
+  
+  return null;
+};
+
+// Validate and sanitize signature field
+const processSignature = (signature, fieldName, errors) => {
+  const error = validateSignature(signature);
+  if (error) {
+    errors[fieldName] = error;
+    return '';
+  }
+  return signature || '';
+};
+
 // Home page
 exports.home = (req, res) => {
   res.render('home', {
@@ -382,12 +410,12 @@ function validateFormData(type, formData, options = {}) {
       if (!validatedData.passportNo) errors.passportNo = 'Passport No is required';
       if (!validatedData.passportHandedOver) errors.passportHandedOver = 'Passport Handed Over is required';
     }
-    // Signatures
-    validatedData.employeeSignature = formData.employeeSignature || '';
+    // Signatures (with size validation)
+    validatedData.employeeSignature = processSignature(formData.employeeSignature, 'employeeSignature', errors);
     validatedData.employeeSignatureDate = formData.employeeSignatureDate || '';
-    validatedData.managerSignature = formData.managerSignature || '';
+    validatedData.managerSignature = processSignature(formData.managerSignature, 'managerSignature', errors);
     validatedData.managerSignatureDate = formData.managerSignatureDate || '';
-    validatedData.hrSignature = formData.hrSignature || '';
+    validatedData.hrSignature = processSignature(formData.hrSignature, 'hrSignature', errors);
     validatedData.hrSignatureDate = formData.hrSignatureDate || '';
   } 
   else if (type === 'leave-expats') {
@@ -431,12 +459,12 @@ function validateFormData(type, formData, options = {}) {
       if (!validatedData.paymentOption) errors.paymentOption = 'Payment Option is required';
       if (!validatedData.ticketOption) errors.ticketOption = 'Ticket Option is required';
     }
-    // Signatures
-    validatedData.employeeSignature = formData.employeeSignature || '';
+    // Signatures (with size validation)
+    validatedData.employeeSignature = processSignature(formData.employeeSignature, 'employeeSignature', errors);
     validatedData.employeeSignatureDate = formData.employeeSignatureDate || '';
-    validatedData.managerSignature = formData.managerSignature || '';
+    validatedData.managerSignature = processSignature(formData.managerSignature, 'managerSignature', errors);
     validatedData.managerSignatureDate = formData.managerSignatureDate || '';
-    validatedData.hrSignature = formData.hrSignature || '';
+    validatedData.hrSignature = processSignature(formData.hrSignature, 'hrSignature', errors);
     validatedData.hrSignatureDate = formData.hrSignatureDate || '';
   } 
   else if (type === 'leave-omani') {
@@ -473,12 +501,12 @@ function validateFormData(type, formData, options = {}) {
       if (!validatedData.totalDays || validatedData.totalDays <= 0) errors.totalDays = 'Total Days is required';
       if (!validatedData.lastDayLeave) errors.lastDayLeave = 'Last Day of Leave is required';
     }
-    // Signatures
-    validatedData.employeeSignature = formData.employeeSignature || '';
+    // Signatures (with size validation)
+    validatedData.employeeSignature = processSignature(formData.employeeSignature, 'employeeSignature', errors);
     validatedData.employeeSignatureDate = formData.employeeSignatureDate || '';
-    validatedData.managerSignature = formData.managerSignature || '';
+    validatedData.managerSignature = processSignature(formData.managerSignature, 'managerSignature', errors);
     validatedData.managerSignatureDate = formData.managerSignatureDate || '';
-    validatedData.hrSignature = formData.hrSignature || '';
+    validatedData.hrSignature = processSignature(formData.hrSignature, 'hrSignature', errors);
     validatedData.hrSignatureDate = formData.hrSignatureDate || '';
   }
 

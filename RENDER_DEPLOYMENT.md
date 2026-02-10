@@ -1,166 +1,164 @@
-# Render Deployment Guide
+# Deployment Guide — Render + Supabase
+
+## Architecture
+
+- **App Server:** Render (free tier) — runs Node.js + Express + Puppeteer
+- **Database:** Supabase (free tier) — managed PostgreSQL with 500MB storage
 
 ## Prerequisites
+
 - GitHub repository with this project
-- Render account (free): https://render.com
+- [Render](https://render.com) account (free)
+- [Supabase](https://supabase.com) account (free)
 
-## Deployment Steps
+## Step 1: Set Up Supabase Database
 
-### 1. Push Code to GitHub
-```bash
-git init
-git add .
-git commit -m "Initial commit - ready for Render"
-git remote add origin <your-repo-url>
-git push -u origin main
+1. Go to [supabase.com](https://supabase.com) and create a new project
+   - Choose a **region close to Oregon** (e.g., US West) to minimize latency with Render
+   - Set a strong database password — save it
+2. Wait for the project to finish provisioning (~2 minutes)
+3. Go to **Settings → Database → Connection string**
+4. Copy **two** connection strings:
+
+| Variable | Which one | Port | Purpose |
+|----------|-----------|------|---------|
+| `DATABASE_URL` | **Transaction mode (Pooler)** | `6543` | App runtime queries |
+| `DIRECT_URL` | **Session mode (Pooler)** | `5432` | Prisma migrations |
+
+> Append `?pgbouncer=true` to `DATABASE_URL` if not already present.
+
+Example:
+```
+DATABASE_URL=postgresql://postgres.[ref]:[password]@aws-0-us-west-1.pooler.supabase.com:6543/postgres?pgbouncer=true
+DIRECT_URL=postgresql://postgres.[ref]:[password]@aws-0-us-west-1.pooler.supabase.com:5432/postgres
 ```
 
-### 2. Create New Web Service on Render
+## Step 2: Deploy to Render
 
-**Option A: Using render.yaml (Recommended)**
-1. Go to https://dashboard.render.com
-2. Click "New" → "Blueprint"
+### Option A: Blueprint (Recommended)
+
+1. Push code to GitHub
+2. Go to [Render Dashboard](https://dashboard.render.com)
+3. Click **"New" → "Blueprint"**
+4. Connect your GitHub repository
+5. Render auto-detects `render.yaml` and creates the web service
+6. Click **"Apply"**
+7. Go to **Web Service → Environment** and set:
+   - `DATABASE_URL` → Supabase pooled connection string (port 6543)
+   - `DIRECT_URL` → Supabase direct connection string (port 5432)
+8. Click **"Manual Deploy" → "Deploy latest commit"**
+
+### Option B: Manual Setup
+
+1. Go to [Render Dashboard](https://dashboard.render.com)
+2. Click **"New" → "Web Service"**
 3. Connect your GitHub repository
-4. Render will auto-detect `render.yaml` and create:
-   - Web service (tes-forms)
-   - PostgreSQL database (tes-forms-db)
-5. Click "Apply" to deploy
-
-**Option B: Manual Setup**
-1. Go to https://dashboard.render.com
-2. Click "New" → "PostgreSQL"
-   - Name: `tes-forms-db`
-   - Plan: Free
-   - Region: Oregon (or preferred)
-   - Click "Create Database"
-3. Click "New" → "Web Service"
-   - Connect GitHub repository
-   - Name: `tes-forms`
-   - Environment: `Node`
-   - Region: Same as database
-   - Branch: `main`
-   - Build Command: `npm install && npm run build && npx prisma migrate deploy`
-   - Start Command: `npm start`
-   - Plan: Free
-   
-### 3. Configure Environment Variables
-In the Web Service settings, add:
+4. Configure:
+   - **Name:** `tes-forms`
+   - **Environment:** `Node`
+   - **Region:** Oregon
+   - **Branch:** `main`
+   - **Build Command:**
+     ```
+     npm install && PUPPETEER_CACHE_DIR=/opt/render/project/.cache/puppeteer npx puppeteer browsers install chrome && npm run build && node scripts/init-database.js
+     ```
+   - **Start Command:** `npm start`
+   - **Plan:** Free
+5. Add environment variables:
 
 | Key | Value |
 |-----|-------|
 | `NODE_ENV` | `production` |
-| `DATABASE_URL` | *Copy from PostgreSQL instance* |
-| `PUPPETEER_SKIP_CHROMIUM_DOWNLOAD` | `true` |
-| `PUPPETEER_EXECUTABLE_PATH` | `/usr/bin/chromium-browser` |
+| `DATABASE_URL` | Supabase pooled connection string (port 6543) |
+| `DIRECT_URL` | Supabase direct connection string (port 5432) |
+| `PUPPETEER_CACHE_DIR` | `/opt/render/project/.cache/puppeteer` |
 
-**To get DATABASE_URL:**
-1. Open your PostgreSQL database in Render dashboard
-2. Copy "Internal Database URL" (starts with `postgresql://`)
-3. Paste into `DATABASE_URL` environment variable
+> **Note:** `PUPPETEER_EXECUTABLE_PATH` is not needed. The app automatically finds Chrome in the cache directory.
 
-### 4. Deploy
-- First deploy happens automatically
-- Monitor logs in Render dashboard
-- Look for: `🚀 Server running on http://0.0.0.0:<PORT>`
+6. Click **"Create Web Service"**
 
-### 5. Initial Database Migration
-Migrations run automatically during build via `npx prisma migrate deploy`.
+## Step 3: Run Initial Migration
 
-If you need to create the first migration:
-1. Locally run: `npx prisma migrate dev --name init`
-2. Commit the new migration file in `prisma/migrations/`
-3. Push to GitHub
-4. Render will apply it on next deploy
+Migrations run during the build step. If you need to run them manually:
+
+1. In Render Dashboard → Web Service → **Shell** (or connect locally)
+2. Run:
+   ```bash
+   npx prisma migrate deploy
+   ```
+
+Or create the first migration locally:
+```bash
+npx prisma migrate dev --name init
+```
+Then commit `prisma/migrations/` and push to GitHub. Render will apply it on next deploy.
 
 ## Post-Deployment
 
-### Access Your App
-Your app will be available at: `https://tes-forms.onrender.com` (or your custom name)
+### Verify Everything Works
 
-### Test PDF Generation
-1. Visit: `https://your-app.onrender.com`
+1. Visit `https://your-app-name.onrender.com`
 2. Create a test application
-3. Click "Save & Export PDF"
-4. Verify PDF downloads correctly
+3. Click "Save & Export PDF" to verify PDF generation
+4. Check Supabase Dashboard → Table Editor to see the saved data
 
-### Monitor Performance
-- First request after idle: ~50s (cold start)
+### Monitor
+
+- **App logs:** Render Dashboard → Web Service → Logs
+- **Database:** Supabase Dashboard → Table Editor / SQL Editor
+- First request after idle takes ~30-50s (Render free tier cold start)
 - Subsequent requests: <2s
-- Check logs in Render dashboard for errors
 
 ## Troubleshooting
 
-### PDF Generation Fails
-**Error:** `Error: Failed to launch the browser process!`
-
-**Solution:** Verify Puppeteer environment variables are set:
-```bash
-PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
-```
-
-Check build logs show Chrome installation succeeded.
-
 ### Database Connection Fails
+
 **Error:** `Can't reach database server`
 
-**Solution:** 
-1. Verify `DATABASE_URL` is set correctly (use Internal URL, not External)
-2. Ensure web service and database are in same region
-3. Check database is active (free tier suspends after 90 days inactivity)
+- Verify `DATABASE_URL` and `DIRECT_URL` are set correctly in Render
+- Check Supabase project is not paused (free tier pauses after 7 days of inactivity — click "Restore" in dashboard)
 
-### Build Fails on Prisma Migration
+### PDF Generation Fails
+
+**Error:** `Failed to launch the browser process!`
+
+- Ensure `PUPPETEER_CACHE_DIR` is set to `/opt/render/project/.cache/puppeteer`
+- Check build logs to confirm Chrome was installed
+- Verify the build command includes `npx puppeteer browsers install chrome`
+
+### Prisma Migration Fails
+
 **Error:** `Migration failed to apply`
 
-**Solution:**
-- Render free PostgreSQL sometimes needs manual migration
-- Use Render Shell to run: `npx prisma migrate deploy`
+- Ensure `DIRECT_URL` is set (Prisma needs a direct connection, not pooled, for migrations)
+- Try running `npx prisma migrate deploy` from Render Shell
 
-### Out of Memory (RAM)
-**Error:** `JavaScript heap out of memory`
+### Supabase Project Paused
 
-**Solution:**
-- Free tier has 512 MB RAM limit
-- Puppeteer uses ~200 MB per PDF generation
-- If multiple concurrent requests fail, consider paid plan ($7/mo = 512 MB → 1 GB)
-
-## Maintenance
-
-### Update Environment Variable
-1. Dashboard → Web Service → Environment
-2. Edit variable → Save
-3. Redeploy (click "Manual Deploy")
-
-### View Logs
-Dashboard → Web Service → Logs (real-time)
-
-### Redeploy
-- **Automatic:** Push to GitHub `main` branch
-- **Manual:** Dashboard → Manual Deploy → Deploy latest commit
-
-### Backup Database
-```bash
-# Download backup from Render dashboard
-# Or use pg_dump via Render Shell:
-pg_dump $DATABASE_URL > backup.sql
-```
+Supabase free tier pauses projects after **7 days of inactivity**. To prevent this:
+- Your app's regular traffic keeps the project active
+- If paused, go to Supabase Dashboard and click "Restore project"
 
 ## Free Tier Limits
 
+### Render (Web Service)
 | Resource | Limit |
 |----------|-------|
-| Web Service | 750 hours/month (24/7 for 1 app) |
-| Database Storage | 1 GB |
-| Database Bandwidth | Unlimited within Render |
+| Hours | 750 hours/month |
+| RAM | 512 MB |
+| Cold Start | ~30-50s after 15 min idle |
 | Build Minutes | Unlimited |
-| Cold Start | ~50 seconds after 15 min idle |
+
+### Supabase (Database)
+| Resource | Limit |
+|----------|-------|
+| Storage | 500 MB |
+| Bandwidth | 5 GB/month |
+| API Requests | Unlimited |
+| Pause Policy | After 7 days inactivity |
 
 ## Upgrade Path
-If you outgrow free tier:
-- **Starter Plan ($7/mo):** No cold starts, 512 MB RAM
-- **Standard Plan ($25/mo):** 2 GB RAM, horizontal scaling
 
-## Support Resources
-- Render Docs: https://render.com/docs
-- Puppeteer on Render: https://render.com/docs/web-services#puppeteer
-- Community: https://community.render.com
+If you outgrow the free tier:
+- **Render Starter ($7/mo):** No cold starts, always on
+- **Supabase Pro ($25/mo):** 8 GB storage, no pausing, daily backups

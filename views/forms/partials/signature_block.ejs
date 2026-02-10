@@ -35,9 +35,13 @@
   </div>
 </div>
 <script>
-  window.__initSignaturePad = window.__initSignaturePad || function(idPrefix) {
+  (function() {
+    const idPrefix = '<%= idPrefix %>';
     const canvas = document.getElementById(idPrefix + 'Canvas');
-    if (!canvas) return;
+    if (!canvas) {
+      console.error('Canvas not found for', idPrefix);
+      return;
+    }
     const ctx = canvas.getContext('2d');
     const input = document.getElementById(idPrefix + 'Input');
     const saveBtn = document.getElementById(idPrefix + 'SaveBtn');
@@ -56,6 +60,11 @@
       canvas.height = 192 * ratio; // h-48 ≈ 192px
       canvas.style.width = rect.width + 'px';
       canvas.style.height = '192px';
+      
+      // Clear canvas and set white background
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
       ctx.scale(ratio, ratio);
       ctx.lineWidth = 3;
       ctx.lineCap = 'round';
@@ -75,7 +84,9 @@
     function start(e) {
       // If in preview mode, clear the canvas first
       if (isPreviewMode) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = '#000000';
         isPreviewMode = false;
         updateSaveButton();
       }
@@ -132,7 +143,9 @@
       if (savedData && savedData.startsWith('data:image')) {
         const img = new Image();
         img.onload = function() {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          // Clear with white background
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
           
           // Calculate scaling to fit within canvas while maintaining aspect ratio
           const canvasWidth = canvas.width / ctx.getTransform().a;
@@ -164,7 +177,9 @@
       const action = btn.getAttribute('data-action');
       if (action === 'clear') {
         btn.addEventListener('click', () => {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.strokeStyle = '#000000';
           input.value = '';
           isPreviewMode = false;
           updateSaveButton();
@@ -177,16 +192,25 @@
             return;
           }
           
-          // Trim transparent pixels and scale up the signature
+          // Trim to just the signature strokes (ignore white background)
+          // We need to find non-white, non-transparent pixels
           const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
           const pixels = imageData.data;
           
-          // Find bounding box of non-transparent pixels
+          // Find bounding box of signature strokes (non-white pixels)
           let minX = canvas.width, minY = canvas.height, maxX = 0, maxY = 0;
+          let hasContent = false;
           for (let y = 0; y < canvas.height; y++) {
             for (let x = 0; x < canvas.width; x++) {
-              const alpha = pixels[(y * canvas.width + x) * 4 + 3];
-              if (alpha > 0) {
+              const i = (y * canvas.width + x) * 4;
+              const r = pixels[i];
+              const g = pixels[i + 1];
+              const b = pixels[i + 2];
+              const a = pixels[i + 3];
+              // Check if pixel is NOT white and NOT transparent (i.e. it's a stroke)
+              const isWhite = r > 240 && g > 240 && b > 240;
+              if (a > 0 && !isWhite) {
+                hasContent = true;
                 if (x < minX) minX = x;
                 if (x > maxX) maxX = x;
                 if (y < minY) minY = y;
@@ -195,11 +219,13 @@
             }
           }
           
-          // If signature exists, crop and scale it
-          if (maxX >= minX && maxY >= minY) {
+          // If signature exists, crop and save with transparent background
+          if (hasContent && maxX >= minX && maxY >= minY) {
             const padding = 10;
-            const cropWidth = maxX - minX + padding * 2;
-            const cropHeight = maxY - minY + padding * 2;
+            const cropX = Math.max(0, minX - padding);
+            const cropY = Math.max(0, minY - padding);
+            const cropWidth = Math.min(canvas.width - cropX, maxX - minX + padding * 2);
+            const cropHeight = Math.min(canvas.height - cropY, maxY - minY + padding * 2);
             
             // Create temporary canvas for cropped signature
             const tempCanvas = document.createElement('canvas');
@@ -207,12 +233,23 @@
             tempCanvas.width = cropWidth;
             tempCanvas.height = cropHeight;
             
-            // Draw cropped signature
-            tempCtx.drawImage(canvas, 
-              minX - padding, minY - padding, cropWidth, cropHeight,
-              0, 0, cropWidth, cropHeight
-            );
+            // Get the cropped image data
+            const croppedData = ctx.getImageData(cropX, cropY, cropWidth, cropHeight);
+            const croppedPixels = croppedData.data;
             
+            // Make white pixels transparent (keep only the signature strokes)
+            for (let i = 0; i < croppedPixels.length; i += 4) {
+              const r = croppedPixels[i];
+              const g = croppedPixels[i + 1];
+              const b = croppedPixels[i + 2];
+              if (r > 240 && g > 240 && b > 240) {
+                croppedPixels[i + 3] = 0; // Make transparent
+              }
+            }
+            
+            tempCtx.putImageData(croppedData, 0, 0);
+            
+            // Save as PNG to preserve transparency (signature only, no background)
             input.value = tempCanvas.toDataURL('image/png');
             isPreviewMode = true;
             updateSaveButton();
@@ -261,7 +298,7 @@
                 tempCanvas.height = height;
                 tempCtx.drawImage(img, 0, 0, width, height);
                 
-                // Save the properly-sized image
+                // Save as PNG to preserve transparency
                 input.value = tempCanvas.toDataURL('image/png');
                 if (dateInput && !dateInput.value) dateInput.value = todayISO();
                 
@@ -283,10 +320,6 @@
     // Initial load
     loadSavedSignature();
     updateSaveButton();
-  };
-
-  // Initialize after DOM loaded
-  document.addEventListener('DOMContentLoaded', () => {
-    __initSignaturePad('<%= idPrefix %>');
-  });
+  })(); // End of IIFE
 </script>
+
