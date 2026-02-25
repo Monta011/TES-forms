@@ -4,10 +4,6 @@ const { PrismaClient } = require('@prisma/client');
  * Helper to force optimal connection pooling parameters onto the DATABASE_URL.
  * This ensures even if the Render dashboard env var is missing these, Prisma
  * will still use them.
- *
- * connection_limit=20 : allows more parallel queries to queue up
- * pool_timeout=0      : infinite timeout so queries wait patiently for Supabase
- *                       to wake up from sleep instead of crashing at 60s.
  */
 function getDatasourceUrl() {
     let url = process.env.DATABASE_URL;
@@ -17,7 +13,6 @@ function getDatasourceUrl() {
         const parsedUrl = new URL(url);
         parsedUrl.searchParams.set('connection_limit', '20');
         parsedUrl.searchParams.set('pool_timeout', '0');
-        // If not already set, ensure pgbouncer is enabled (needed for Supabase pooling)
         if (!parsedUrl.searchParams.has('pgbouncer')) {
             parsedUrl.searchParams.set('pgbouncer', 'true');
         }
@@ -28,37 +23,86 @@ function getDatasourceUrl() {
     }
 }
 
-// Single shared Prisma client instance configured with the optimized URL
-const prisma = new PrismaClient({
-    datasources: {
-        db: {
-            url: getDatasourceUrl(),
+/**
+ * Factory function to create a new PrismaClient.
+ * We need this so we can trash dead clients and make new ones.
+ */
+function createPrismaClient() {
+    return new PrismaClient({
+        datasources: {
+            db: {
+                url: getDatasourceUrl(),
+            },
         },
-    },
-});
+    });
+}
+
+// Global active instance
+let activePrisma = createPrismaClient();
 
 // Track whether we have an active DB connection
 let isConnected = false;
 
 /**
- * Connect to the database with retry logic.
- * Supabase free tier can take 15-30s to wake up, so we retry
- * with exponential backoff to handle cold starts gracefully.
- *
- * @param {number} maxRetries - Maximum number of connection attempts
- * @returns {Promise<boolean>} - true if connected, false otherwise
+ * A Proxy object that forwards ALL property accesses and methods
+ * (e.g., prisma.application.findMany) directly to the currently active
+ * PrismaClient instance.
+ * 
+ * This allows us to hot-swap the underlying instance without breaking
+ * other files that imported `const { prisma } = require('./prismaClient')`.
+ */
+const prismaProxy = new Proxy({}, {
+    get: function (target, prop, receiver) {
+        const value = activePrisma[prop];
+        if (typeof value === 'function') {
+            // Bind functions so `this` inside Prisma internals works correctly
+            return value.bind(activePrisma);
+        }
+        return value;
+    }
+});
+
+/**
+ * Destroys the current Prisma instance (which might have a dead internal socket/DNS cache)
+ * and completely replaces it with a brand new one.
+ */
+async function recreatePrismaClient() {
+    console.warn("🔄 Re-instantiating Prisma Client due to unrecoverable connection/routing error...");
+    try {
+        await activePrisma.$disconnect();
+    } catch (e) {
+        // We don't care if disconnect fails, the socket is already dead
+        console.warn("   (Discarding old dead client)");
+    }
+
+    // Create entirely new engine, forcing DNS re-resolution and new sockets
+    activePrisma = createPrismaClient();
+    isConnected = false;
+
+    // Test the new connection
+    try {
+        await activePrisma.$connect();
+        isConnected = true;
+        console.log("✅ Successfully replaced Prisma Client. Recovery complete.");
+    } catch (e) {
+        console.error("❌ Failed to connect new Prisma Client during recovery:", e.message);
+    }
+}
+
+/**
+ * Connect to the database with retry logic on startup.
  */
 async function connectWithRetry(maxRetries = 8) {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
-            await prisma.$connect();
+            await activePrisma.$connect();
             isConnected = true;
             console.log('✅ Database connected successfully');
             return true;
         } catch (error) {
             const delay = Math.min(3000 * Math.pow(2, attempt - 1), 30000);
             console.warn(
-                `⚠️  Database connection attempt ${attempt}/${maxRetries} failed: ${error.message}`
+                `⚠️  Database startup connection attempt ${attempt}/${maxRetries} failed: ${error.message}`
             );
             if (attempt < maxRetries) {
                 console.log(`   Retrying in ${delay / 1000}s...`);
@@ -66,18 +110,13 @@ async function connectWithRetry(maxRetries = 8) {
             }
         }
     }
-    console.error('❌ Database connection failed after all retries');
+    console.error('❌ Database startup connection failed after all retries');
     return false;
 }
 
 /**
- * Wrap a Prisma query with automatic retry.
- * Handles the case where the DB is still waking up when the first
- * request arrives (before connectWithRetry has finished).
- *
- * @param {Function} queryFn - async function that runs a Prisma query
- * @param {number} maxRetries - how many times to retry
- * @returns {Promise<any>} - query result
+ * Wrap a Prisma query with automatic retry AND instance hot-swapping.
+ * Handled flawlessly for P1001 (DNS/Unreachable) and P2024 (Pool Exhausted).
  */
 async function withRetry(queryFn, maxRetries = 3) {
     let lastError;
@@ -86,17 +125,32 @@ async function withRetry(queryFn, maxRetries = 3) {
             return await queryFn();
         } catch (error) {
             lastError = error;
+
+            // Log the error carefully
+            const errorType = error.code ? `[${error.code}]` : 'Error';
+            console.warn(`⚠️  Query failed ${errorType} (attempt ${attempt}/${maxRetries}): ${error.message.split('\n')[0]}`);
+
+            // Is it a network dropout or pool starvation?
             const isRetryable =
                 error.message.includes("Can't reach database") ||
                 error.message.includes('Timed out fetching') ||
                 error.message.includes('connection pool') ||
-                error.code === 'P2024';
+                error.code === 'P2024' ||
+                error.code === 'P1001';
 
             if (isRetryable && attempt < maxRetries) {
-                const delay = 2000 * attempt; // 2s, 4s
-                console.warn(`⚠️  Query failed (attempt ${attempt}/${maxRetries}), retrying in ${delay / 1000}s...`);
-                await new Promise((resolve) => setTimeout(resolve, delay));
+                // If it's a hard unreachability error (like IP change or sleep mode dead-cache)
+                // then waiting won't help. We must nuke the connection and rebuild Prisma.
+                if (error.code === 'P1001' || error.message.includes("Can't reach database")) {
+                    await recreatePrismaClient();
+                } else {
+                    // Just wait a few seconds and try the existing pool again
+                    const delay = 2000 * attempt;
+                    console.log(`   Retrying query in ${delay / 1000}s...`);
+                    await new Promise((resolve) => setTimeout(resolve, delay));
+                }
             } else {
+                // Not a network error (e.g. invalid query syntax), throw immediately
                 throw error;
             }
         }
@@ -104,4 +158,5 @@ async function withRetry(queryFn, maxRetries = 3) {
     throw lastError;
 }
 
-module.exports = { prisma, connectWithRetry, withRetry };
+// Export the proxy as 'prisma' so requiring files don't notice anything changed
+module.exports = { prisma: prismaProxy, connectWithRetry, withRetry };
