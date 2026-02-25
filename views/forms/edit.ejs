@@ -109,10 +109,15 @@
           return match ? match[1] : null;
         }
 
-        document.getElementById('export-pdf-btn').addEventListener('click', function () {
+        document.getElementById('export-pdf-btn').addEventListener('click', function (e) {
           var form = this.closest('form');
 
-          // Show overlay immediately before the form submits
+          // If the form has invalid required fields, stop here and let browser show errors
+          if (form.checkValidity && !form.checkValidity()) {
+            return; // browser will show native validation popups automatically
+          }
+
+          // Form is valid — show overlay immediately before submit navigates away
           var overlay = document.getElementById('pdf-loading-overlay');
           overlay.style.display = 'flex';
 

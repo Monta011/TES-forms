@@ -145,7 +145,7 @@ async function connectWithRetry(maxRetries = 8) {
  * Wrap a Prisma query with automatic retry AND instance hot-swapping.
  * Handled flawlessly for P1001 (DNS/Unreachable) and P2024 (Pool Exhausted).
  */
-async function withRetry(queryFn, maxRetries = 3) {
+async function withRetry(queryFn, maxRetries = 5) {
     let lastError;
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
@@ -166,10 +166,12 @@ async function withRetry(queryFn, maxRetries = 3) {
                 error.code === 'P1001';
 
             if (isRetryable && attempt < maxRetries) {
-                // If it's a hard unreachability error (like IP change or sleep mode dead-cache)
+                // If it's a hard unreachability error (like IP change or stale pool)
                 // then waiting won't help. We must nuke the connection and rebuild Prisma.
                 if (error.code === 'P1001' || error.message.includes("Can't reach database")) {
                     await recreatePrismaClient();
+                    // Give the new client a moment to stabilize
+                    await new Promise((resolve) => setTimeout(resolve, 2000));
                 } else {
                     // Just wait a few seconds and try the existing pool again
                     const delay = 2000 * attempt;

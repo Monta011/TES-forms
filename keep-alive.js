@@ -55,20 +55,22 @@ function startKeepAlive(appUrl) {
         console.warn('⚠️  Keep-alive: RENDER_APP_URL not set — self-ping disabled');
     }
 
-    // ── Self-ping every 14 minutes (Render sleeps at 15 min) ─────────────────
+    // ── Self-ping + DB heartbeat every 14 minutes ────────────────────────────
+    // The self-ping prevents Render from sleeping.
+    // The DB heartbeat prevents Supabase from dropping idle Prisma connections.
     cron.schedule('*/14 * * * *', () => {
         if (appUrl) pingself(appUrl);
+        supabaseHeartbeat(); // keeps Prisma connection pool warm
     });
 
-    // ── Supabase heartbeat every 3 days ──────────────────────────────────────
-    // Runs at 00:00 on day 1, 4, 7, 10, 13, 16, 19, 22, 25, 28 of each month
+    // ── Extra Supabase heartbeat every 3 days (prevents full project pause) ──
     cron.schedule('0 0 1,4,7,10,13,16,19,22,25,28 * *', () => {
         supabaseHeartbeat();
     });
 
     console.log('✅ Keep-alive scheduler started');
-    console.log(`   • Self-ping:          every 14 minutes → ${appUrl || '(disabled)'}`);
-    console.log('   • Supabase heartbeat: every 3 days');
+    console.log(`   • Self-ping + DB heartbeat: every 14 minutes → ${appUrl || '(disabled)'}`);
+    console.log('   • Supabase project pause prevention: every 3 days');
 }
 
 module.exports = { startKeepAlive };
