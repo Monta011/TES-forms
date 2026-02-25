@@ -81,21 +81,27 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start server
-app.listen(PORT, async () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-  console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
-
-  // Connect to database with retry logic (handles Supabase cold starts)
+// Start server — connect to DB FIRST, then accept HTTP traffic.
+// This prevents Render from routing requests before the DB is ready.
+async function startServer() {
+  // Step 1: Connect to the database (with retry for Supabase cold starts)
   const { connectWithRetry } = require('./prismaClient');
   const connected = await connectWithRetry();
   if (!connected) {
-    console.error('Check DATABASE_URL environment variable');
+    console.error('⚠️  Could not connect to database — starting server anyway');
+    console.error('   Check DATABASE_URL environment variable');
   }
 
-  // Start keep-alive scheduler in production to prevent
-  // Render from sleeping and Supabase from pausing
-  if (process.env.NODE_ENV === 'production') {
-    startKeepAlive(process.env.RENDER_APP_URL);
-  }
-});
+  // Step 2: NOW start listening for HTTP requests
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+
+    // Start keep-alive scheduler in production
+    if (process.env.NODE_ENV === 'production') {
+      startKeepAlive(process.env.RENDER_APP_URL);
+    }
+  });
+}
+
+startServer();

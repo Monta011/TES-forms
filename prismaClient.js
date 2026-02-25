@@ -15,8 +15,8 @@ function getDatasourceUrl() {
     try {
         const parsedUrl = new URL(url);
 
-        // Conservative connection limit — Supabase free tier caps ~10 pooler connections
-        parsedUrl.searchParams.set('connection_limit', '5');
+        // Single connection — prevents contention on Supabase free tier pooler
+        parsedUrl.searchParams.set('connection_limit', '1');
         // Infinite pool timeout: queries wait patiently instead of crashing
         parsedUrl.searchParams.set('pool_timeout', '0');
         // 60s TCP connect timeout — Supabase cold starts / cross-region latency
