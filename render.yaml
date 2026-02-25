@@ -3,7 +3,7 @@ services:
   - type: web
     name: tes-forms
     env: node
-    region: oregon # Change to your preferred region
+    region: singapore # Closest Render region to Supabase ap-south-1 (Mumbai)
     plan: free
     buildCommand: npm install && PUPPETEER_CACHE_DIR=/opt/render/project/.cache/puppeteer npx puppeteer browsers install chrome && npm run build && node scripts/init-database.js
     startCommand: npm start
