@@ -13,6 +13,8 @@ function getDatasourceUrl() {
         const parsedUrl = new URL(url);
         parsedUrl.searchParams.set('connection_limit', '20');
         parsedUrl.searchParams.set('pool_timeout', '0');
+        // Increase TCP connection timeout to 60s (default 5s is too short for Supabase cold starts)
+        parsedUrl.searchParams.set('connect_timeout', '60');
         if (!parsedUrl.searchParams.has('pgbouncer')) {
             parsedUrl.searchParams.set('pgbouncer', 'true');
         }
@@ -42,6 +44,7 @@ let activePrisma = createPrismaClient();
 
 // Track whether we have an active DB connection
 let isConnected = false;
+let isRecreating = false;
 
 /**
  * A Proxy object that forwards ALL property accesses and methods
@@ -67,6 +70,15 @@ const prismaProxy = new Proxy({}, {
  * and completely replaces it with a brand new one.
  */
 async function recreatePrismaClient() {
+    if (isRecreating) {
+        // Mutex: wait for the other concurrent request to finish reconstructing the client
+        while (isRecreating) {
+            await new Promise(resolve => setTimeout(resolve, 200));
+        }
+        return;
+    }
+
+    isRecreating = true;
     console.warn("🔄 Re-instantiating Prisma Client due to unrecoverable connection/routing error...");
     try {
         await activePrisma.$disconnect();
@@ -86,6 +98,8 @@ async function recreatePrismaClient() {
         console.log("✅ Successfully replaced Prisma Client. Recovery complete.");
     } catch (e) {
         console.error("❌ Failed to connect new Prisma Client during recovery:", e.message);
+    } finally {
+        isRecreating = false;
     }
 }
 
