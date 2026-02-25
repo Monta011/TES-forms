@@ -9,20 +9,29 @@ function getDatasourceUrl() {
     let url = process.env.DATABASE_URL;
     if (!url) return undefined;
 
-    // VERY IMPORTANT: Render adds/users paste literal quotes sometimes. 
-    // This breaks `new URL()` and bypasses all our injection logic.
+    // Strip accidental quotes from Render dashboard copy-paste
     url = url.replace(/^"|"$/g, '').replace(/^'|'$/g, '');
 
     try {
         const parsedUrl = new URL(url);
-        parsedUrl.searchParams.set('connection_limit', '20');
+
+        // Conservative connection limit — Supabase free tier caps ~10 pooler connections
+        parsedUrl.searchParams.set('connection_limit', '5');
+        // Infinite pool timeout: queries wait patiently instead of crashing
         parsedUrl.searchParams.set('pool_timeout', '0');
-        // Increase TCP connection timeout to 60s (default 5s is too short for Supabase cold starts)
+        // 60s TCP connect timeout — Supabase cold starts / cross-region latency
         parsedUrl.searchParams.set('connect_timeout', '60');
-        if (!parsedUrl.searchParams.has('pgbouncer')) {
+        // Supabase REQUIRES SSL from external servers (like Render)
+        parsedUrl.searchParams.set('sslmode', 'require');
+
+        // Only set pgbouncer=true if we're on the Transaction Pooler port (6543)
+        if (parsedUrl.port === '6543') {
             parsedUrl.searchParams.set('pgbouncer', 'true');
         }
-        return parsedUrl.toString();
+
+        const finalUrl = parsedUrl.toString();
+        console.log('🔗 Prisma datasource URL configured (port:', parsedUrl.port + ')');
+        return finalUrl;
     } catch (e) {
         console.warn('⚠️ Could not parse DATABASE_URL for query param injection:', e.message);
         return url;
