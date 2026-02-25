@@ -1,185 +1,255 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= title %></title>
+  <title>
+    <%= title %>
+  </title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body class="bg-gray-50 min-h-screen flex flex-col">
   <%- include('../partials/navbar') %>
-  
-  <main class="flex-grow container mx-auto px-4 py-8">
-    <% if (typeof exportError !== 'undefined' && exportError) { %>
-      <div id="export-error-toast" class="fixed top-20 left-1/2 -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded shadow-lg z-50">
-        Form is missing some fields. Please edit and complete required items.
-      </div>
-      <script>
-        setTimeout(function(){
-          var el = document.getElementById('export-error-toast');
-          if (el) el.remove();
-        }, 5000);
-      </script>
-    <% } %>
-    <div class="max-w-7xl mx-auto">
-  <!-- Header -->
-  <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-    <div>
-      <a href="/" class="text-blue-600 hover:text-blue-800 text-sm mb-2 inline-block">&larr; Back to Home</a>
-      <h1 class="text-3xl font-bold text-gray-800"><%= displayName %></h1>
-      <p class="text-gray-600 mt-1">All submitted applications</p>
-    </div>
-    <div class="mt-4 md:mt-0">
-      <a href="/forms/<%= type %>/new" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition">
-        + New Application
-      </a>
-    </div>
-  </div>
 
-  <!-- Filters -->
-  <div class="bg-white rounded-lg shadow p-6 mb-6">
-    <h2 class="text-lg font-semibold text-gray-800 mb-4">Filter Applications</h2>
-    <form method="GET" action="/forms/<%= type %>" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <div>
-        <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
-        <input 
-          type="text" 
-          id="search" 
-          name="search" 
-          placeholder="Name or ID..." 
-          value="<%= filters.search || '' %>"
-          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        >
-      </div>
-      <div>
-        <label for="from" class="block text-sm font-medium text-gray-700 mb-1">From Date</label>
-        <input 
-          type="date" 
-          id="from" 
-          name="from" 
-          value="<%= filters.from || '' %>"
-          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        >
-      </div>
-      <div>
-        <label for="to" class="block text-sm font-medium text-gray-700 mb-1">To Date</label>
-        <input 
-          type="date" 
-          id="to" 
-          name="to" 
-          value="<%= filters.to || '' %>"
-          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        >
-      </div>
-      <div class="flex items-end space-x-2">
-        <button 
-          type="submit" 
-          class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition"
-        >
-          Apply
-        </button>
-        <a 
-          href="/forms/<%= type %>" 
-          class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg transition text-center"
-        >
-          Clear
-        </a>
-      </div>
-    </form>
-  </div>
-
-  <!-- Applications List -->
-  <div class="bg-white rounded-lg shadow overflow-hidden">
-    <% if (applications.length === 0) { %>
-      <div class="text-center py-12">
-        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-        </svg>
-        <h3 class="mt-2 text-lg font-medium text-gray-900">No applications found</h3>
-        <p class="mt-1 text-gray-500">Get started by creating a new application.</p>
-        <div class="mt-6">
-          <a href="/forms/<%= type %>/new" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition">
-            + New Application
-          </a>
+    <main class="flex-grow container mx-auto px-4 py-8">
+      <% if (typeof exportError !=='undefined' && exportError) { %>
+        <div id="export-error-toast"
+          class="fixed top-20 left-1/2 -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded shadow-lg z-50">
+          Form is missing some fields. Please edit and complete required items.
         </div>
-      </div>
-    <% } else { %>
-      <!-- Desktop Table -->
-      <div class="hidden md:block overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                <%= type === 'rejoining' ? 'Name' : 'Employee Name' %>
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                <%= type === 'rejoining' ? 'Work ID' : 'Employee ID' %>
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            <% applications.forEach(app => { %>
-              <tr class="hover:bg-gray-50">
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <%= app.id.substring(0, 8) %>...
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  <%= app.data.name || app.data.employeeName || 'N/A' %>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <%= app.data.wrokId || app.data.employeeId || 'N/A' %>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <%= new Date(app.createdAt).toLocaleDateString() %>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
-                  <a href="/forms/<%= type %>/<%= app.id %>/edit" class="text-blue-600 hover:text-blue-900 font-medium">Edit</a>
-                  <span class="text-gray-300">|</span>
-                  <a href="/forms/<%= type %>/<%= app.id %>/pdf" class="text-green-600 hover:text-green-900 font-medium">PDF</a>
-                </td>
-              </tr>
-            <% }); %>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Mobile Cards -->
-      <div class="md:hidden divide-y divide-gray-200">
-        <% applications.forEach(app => { %>
-          <div class="p-4">
-            <div class="flex justify-between items-start mb-2">
+        <script>
+          setTimeout(function () {
+            var el = document.getElementById('export-error-toast');
+            if (el) el.remove();
+          }, 5000);
+        </script>
+        <% } %>
+          <div class="max-w-7xl mx-auto">
+            <!-- Header -->
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
               <div>
-                <p class="font-medium text-gray-900"><%= app.data.name || app.data.employeeName || 'N/A' %></p>
-                <p class="text-sm text-gray-500"><%= app.data.wrokId || app.data.employeeId || 'N/A' %></p>
+                <a href="/" class="text-blue-600 hover:text-blue-800 text-sm mb-2 inline-block">&larr; Back to Home</a>
+                <h1 class="text-3xl font-bold text-gray-800">
+                  <%= displayName %>
+                </h1>
+                <p class="text-gray-600 mt-1">All submitted applications</p>
               </div>
-              <span class="text-xs text-gray-500"><%= new Date(app.createdAt).toLocaleDateString() %></span>
+              <div class="mt-4 md:mt-0">
+                <a href="/forms/<%= type %>/new"
+                  class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition">
+                  + New Application
+                </a>
+              </div>
             </div>
-            <div class="flex space-x-2 mt-3">
-              <a href="/forms/<%= type %>/<%= app.id %>/edit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-center py-2 px-4 rounded-lg text-sm font-medium transition">
-                Edit
-              </a>
-              <a href="/forms/<%= type %>/<%= app.id %>/pdf" class="flex-1 bg-green-600 hover:bg-green-700 text-white text-center py-2 px-4 rounded-lg text-sm font-medium transition">
-                PDF
-              </a>
+
+            <!-- Filters -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+              <h2 class="text-lg font-semibold text-gray-800 mb-4">Filter Applications</h2>
+              <form method="GET" action="/forms/<%= type %>" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                  <input type="text" id="search" name="search" placeholder="Name or ID..."
+                    value="<%= filters.search || '' %>"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                  <label for="from" class="block text-sm font-medium text-gray-700 mb-1">From Date</label>
+                  <input type="date" id="from" name="from" value="<%= filters.from || '' %>"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                  <label for="to" class="block text-sm font-medium text-gray-700 mb-1">To Date</label>
+                  <input type="date" id="to" name="to" value="<%= filters.to || '' %>"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="flex items-end space-x-2">
+                  <button type="submit"
+                    class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+                    Apply
+                  </button>
+                  <a href="/forms/<%= type %>"
+                    class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg transition text-center">
+                    Clear
+                  </a>
+                </div>
+              </form>
+            </div>
+
+            <!-- Applications List -->
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+              <% if (applications.length===0) { %>
+                <div class="text-center py-12">
+                  <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <h3 class="mt-2 text-lg font-medium text-gray-900">No applications found</h3>
+                  <p class="mt-1 text-gray-500">Get started by creating a new application.</p>
+                  <div class="mt-6">
+                    <a href="/forms/<%= type %>/new"
+                      class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition">
+                      + New Application
+                    </a>
+                  </div>
+                </div>
+                <% } else { %>
+                  <!-- Desktop Table -->
+                  <div class="hidden md:block overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                      <thead class="bg-gray-50">
+                        <tr>
+                          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID
+                          </th>
+                          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <%= type==='rejoining' ? 'Name' : 'Employee Name' %>
+                          </th>
+                          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <%= type==='rejoining' ? 'Work ID' : 'Employee ID' %>
+                          </th>
+                          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Created</th>
+                          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody class="bg-white divide-y divide-gray-200">
+                        <% applications.forEach(app=> { %>
+                          <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <%= app.id.substring(0, 8) %>...
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                              <%= app.data.name || app.data.employeeName || 'N/A' %>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <%= app.data.wrokId || app.data.employeeId || 'N/A' %>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <%= new Date(app.createdAt).toLocaleDateString() %>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                              <a href="/forms/<%= type %>/<%= app.id %>/edit"
+                                class="text-blue-600 hover:text-blue-900 font-medium">Edit</a>
+                              <span class="text-gray-300">|</span>
+                              <a href="/forms/<%= type %>/<%= app.id %>/pdf"
+                                class="text-green-600 hover:text-green-900 font-medium">PDF</a>
+                            </td>
+                          </tr>
+                          <% }); %>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <!-- Mobile Cards -->
+                  <div class="md:hidden divide-y divide-gray-200">
+                    <% applications.forEach(app=> { %>
+                      <div class="p-4">
+                        <div class="flex justify-between items-start mb-2">
+                          <div>
+                            <p class="font-medium text-gray-900">
+                              <%= app.data.name || app.data.employeeName || 'N/A' %>
+                            </p>
+                            <p class="text-sm text-gray-500">
+                              <%= app.data.wrokId || app.data.employeeId || 'N/A' %>
+                            </p>
+                          </div>
+                          <span class="text-xs text-gray-500">
+                            <%= new Date(app.createdAt).toLocaleDateString() %>
+                          </span>
+                        </div>
+                        <div class="flex space-x-2 mt-3">
+                          <a href="/forms/<%= type %>/<%= app.id %>/edit"
+                            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-center py-2 px-4 rounded-lg text-sm font-medium transition">
+                            Edit
+                          </a>
+                          <a href="/forms/<%= type %>/<%= app.id %>/pdf"
+                            class="flex-1 bg-green-600 hover:bg-green-700 text-white text-center py-2 px-4 rounded-lg text-sm font-medium transition">
+                            PDF
+                          </a>
+                        </div>
+                      </div>
+                      <% }); %>
+                  </div>
+
+                  <!-- Count -->
+                  <div class="bg-gray-50 px-6 py-3 border-t border-gray-200">
+                    <p class="text-sm text-gray-700">
+                      Showing <span class="font-medium">
+                        <%= applications.length %>
+                      </span> application(s)
+                    </p>
+                  </div>
+                  <% } %>
             </div>
           </div>
-        <% }); %>
-      </div>
+    </main>
 
-      <!-- Count -->
-      <div class="bg-gray-50 px-6 py-3 border-t border-gray-200">
-        <p class="text-sm text-gray-700">
-          Showing <span class="font-medium"><%= applications.length %></span> application(s)
-        </p>
-      </div>
-    <% } %>
-  </div>
-</div>
-  </main>
+    <%- include('../partials/footer') %>
 
-  <%- include('../partials/footer') %>
+      <!-- PDF Loading Overlay -->
+      <div id="pdf-loading-overlay"
+        style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:9999; flex-direction:column; align-items:center; justify-content:center;">
+        <div
+          style="background:#fff; border-radius:16px; padding:40px 48px; display:flex; flex-direction:column; align-items:center; box-shadow:0 8px 40px rgba(0,0,0,0.2); max-width:340px; width:90%;">
+          <div
+            style="width:56px; height:56px; border:5px solid #e5e7eb; border-top-color:#2563eb; border-radius:50%; animation:pdf-spin 0.9s linear infinite; margin-bottom:20px;">
+          </div>
+          <p style="font-size:1.15rem; font-weight:700; color:#1e293b; margin:0 0 6px;">Generating PDF&hellip;</p>
+          <p style="font-size:0.875rem; color:#64748b; margin:0; text-align:center;">Please wait, this may take a few
+            seconds.</p>
+        </div>
+      </div>
+      <style>
+        @keyframes pdf-spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+      </style>
+      <script>
+        function randomToken() {
+          return Math.random().toString(36).slice(2) + Date.now();
+        }
+        function getCookie(name) {
+          var match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+          return match ? match[1] : null;
+        }
+        function showPdfOverlay(href, el, e) {
+          e.preventDefault();
+          var token = randomToken();
+          var cookieName = 'pdf_ready_' + token;
+          var url = href + (href.indexOf('?') === -1 ? '?' : '&') + 'pdfToken=' + token;
+
+          // Show overlay
+          var overlay = document.getElementById('pdf-loading-overlay');
+          overlay.style.display = 'flex';
+
+          // Open the PDF download in background
+          window.location.href = url;
+
+          // Poll every 500ms for the cookie the server sets when PDF is sent
+          var maxWait = 60; // 30 seconds
+          var polls = 0;
+          var interval = setInterval(function () {
+            polls++;
+            if (getCookie(cookieName) || polls >= maxWait) {
+              clearInterval(interval);
+              overlay.style.display = 'none';
+              // Clean up the cookie
+              document.cookie = cookieName + '=; Max-Age=0; path=/';
+            }
+          }, 500);
+        }
+
+        // Intercept all PDF links
+        document.querySelectorAll('a[href*="/pdf"]').forEach(function (el) {
+          el.addEventListener('click', function (e) {
+            showPdfOverlay(el.href, el, e);
+          });
+        });
+      </script>
 </body>
+
 </html>

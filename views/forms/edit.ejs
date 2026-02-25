@@ -1,81 +1,147 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= title %></title>
+  <title>
+    <%= title %>
+  </title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body class="bg-gray-50 min-h-screen flex flex-col">
   <%- include('../partials/navbar') %>
-  
-  <main class="flex-grow container mx-auto px-4 py-8">
-    <% if (typeof exportError !== 'undefined' && exportError) { %>
-      <div id="export-error-toast" class="fixed top-4 left-1/2 -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded shadow-lg z-50">
-        Form is missing some fields. Click Edit to fill them.
-      </div>
-      <script>
-        setTimeout(function(){
-          var el = document.getElementById('export-error-toast');
-          if (el) el.remove();
-        }, 5000);
-      </script>
-    <% } %>
-    <div class="max-w-4xl mx-auto">
-      <!-- Header -->
-      <div class="mb-6">
-        <a href="/forms/<%= type %>" class="text-blue-600 hover:text-blue-800 text-sm mb-2 inline-block">&larr; Back to List</a>
-        <h1 class="text-3xl font-bold text-gray-800"><%= displayName %></h1>
-        <p class="text-gray-600 mt-1">Edit application</p>
-      </div>
 
-      <!-- Form -->
-      <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
-        <form method="POST" action="/forms/<%= type %>/<%= application.id %>">
-          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-          <% if (typeof strictRequired !== 'undefined' && strictRequired && Object.keys(errors || {}).length > 0) { %>
-            <div class="mb-4 p-4 rounded-lg bg-red-50 border border-red-200 text-red-700">
-              <p class="font-semibold">Cannot export PDF: please complete required fields.</p>
-              <ul class="list-disc ml-5 mt-2 text-sm">
-                <% Object.keys(errors).forEach(function(k) { %>
-                  <li><%= errors[k] %></li>
-                <% }) %>
-              </ul>
+    <main class="flex-grow container mx-auto px-4 py-8">
+      <% if (typeof exportError !=='undefined' && exportError) { %>
+        <div id="export-error-toast"
+          class="fixed top-4 left-1/2 -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded shadow-lg z-50">
+          Form is missing some fields. Click Edit to fill them.
+        </div>
+        <script>
+          setTimeout(function () {
+            var el = document.getElementById('export-error-toast');
+            if (el) el.remove();
+          }, 5000);
+        </script>
+        <% } %>
+          <div class="max-w-4xl mx-auto">
+            <!-- Header -->
+            <div class="mb-6">
+              <a href="/forms/<%= type %>" class="text-blue-600 hover:text-blue-800 text-sm mb-2 inline-block">&larr;
+                Back to List</a>
+              <h1 class="text-3xl font-bold text-gray-800">
+                <%= displayName %>
+              </h1>
+              <p class="text-gray-600 mt-1">Edit application</p>
             </div>
-          <% } %>
-          
-          <%- include('partials/' + type.replace(/-/g, '_') + '_form', { formData, errors, strictRequired }) %>
 
-          <!-- Form Actions -->
-          <div class="flex flex-col md:flex-row gap-3 mt-8 pt-6 border-t border-gray-200">
-            <button 
-              type="submit" 
-              name="action" 
-              value="save"
-              class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition"
-            >
-              Save & Close
-            </button>
-            <button 
-              type="submit" 
-              name="action" 
-              value="export"
-              class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition"
-            >
-              Save & Export PDF
-            </button>
-            <a 
-              href="/forms/<%= type %>" 
-              class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg transition text-center"
-            >
-              Cancel
-            </a>
+            <!-- Form -->
+            <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
+              <form method="POST" action="/forms/<%= type %>/<%= application.id %>">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <% if (typeof strictRequired !=='undefined' && strictRequired && Object.keys(errors || {}).length> 0) {
+                  %>
+                  <div class="mb-4 p-4 rounded-lg bg-red-50 border border-red-200 text-red-700">
+                    <p class="font-semibold">Cannot export PDF: please complete required fields.</p>
+                    <ul class="list-disc ml-5 mt-2 text-sm">
+                      <% Object.keys(errors).forEach(function(k) { %>
+                        <li>
+                          <%= errors[k] %>
+                        </li>
+                        <% }) %>
+                    </ul>
+                  </div>
+                  <% } %>
+
+                    <%- include('partials/' + type.replace(/-/g, '_' ) + '_form' , { formData, errors, strictRequired })
+                      %>
+
+                      <!-- Form Actions -->
+                      <div class="flex flex-col md:flex-row gap-3 mt-8 pt-6 border-t border-gray-200">
+                        <button type="submit" name="action" value="save"
+                          class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition">
+                          Save & Close
+                        </button>
+                        <button type="submit" name="action" value="export" id="export-pdf-btn"
+                          class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition">
+                          Save &amp; Export PDF
+                        </button>
+                        <a href="/forms/<%= type %>"
+                          class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg transition text-center">
+                          Cancel
+                        </a>
+                      </div>
+              </form>
+            </div>
           </div>
-        </form>
-      </div>
-    </div>
-  </main>
+    </main>
 
-  <%- include('../partials/footer') %>
+    <%- include('../partials/footer') %>
+
+      <!-- PDF Loading Overlay -->
+      <div id="pdf-loading-overlay"
+        style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:9999; flex-direction:column; align-items:center; justify-content:center;">
+        <div
+          style="background:#fff; border-radius:16px; padding:40px 48px; display:flex; flex-direction:column; align-items:center; box-shadow:0 8px 40px rgba(0,0,0,0.2); max-width:340px; width:90%;">
+          <div
+            style="width:56px; height:56px; border:5px solid #e5e7eb; border-top-color:#16a34a; border-radius:50%; animation:pdf-spin 0.9s linear infinite; margin-bottom:20px;">
+          </div>
+          <p style="font-size:1.15rem; font-weight:700; color:#1e293b; margin:0 0 6px;">Generating PDF&hellip;</p>
+          <p style="font-size:0.875rem; color:#64748b; margin:0; text-align:center;">Please wait, this may take a few
+            seconds.</p>
+        </div>
+      </div>
+      <style>
+        @keyframes pdf-spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+      </style>
+      <script>
+        function randomToken() {
+          return Math.random().toString(36).slice(2) + Date.now();
+        }
+        function getCookie(name) {
+          var match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+          return match ? match[1] : null;
+        }
+
+        document.getElementById('export-pdf-btn').addEventListener('click', function () {
+          var form = this.closest('form');
+          // Add pdfToken to form action so the server can set the ready cookie
+          var token = randomToken();
+          var cookieName = 'pdf_ready_' + token;
+          var action = form.action;
+          form.action = action + (action.indexOf('?') === -1 ? '?' : '&') + 'pdfToken=' + token;
+
+          // Small delay so browser validation runs first
+          var btn = this;
+          setTimeout(function () {
+            // Only show if the form actually submits (no validation errors)
+            if (!form.checkValidity || form.checkValidity()) {
+              var overlay = document.getElementById('pdf-loading-overlay');
+              overlay.style.display = 'flex';
+
+              // Poll for the cookie the server sets when PDF is ready
+              var maxWait = 120; // 60 seconds
+              var polls = 0;
+              var interval = setInterval(function () {
+                polls++;
+                if (getCookie(cookieName) || polls >= maxWait) {
+                  clearInterval(interval);
+                  overlay.style.display = 'none';
+                  document.cookie = cookieName + '=; Max-Age=0; path=/';
+                  // Restore original form action
+                  form.action = action;
+                }
+              }, 500);
+            }
+          }, 50);
+        });
+      </script>
 </body>
+
 </html>

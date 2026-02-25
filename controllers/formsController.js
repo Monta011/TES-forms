@@ -353,6 +353,12 @@ exports.exportPDF = async (req, res) => {
     // Generate PDF
     const pdfBuffer = await pdfService.generatePDF(type, parsedData);
 
+    // Set a cookie so the client knows the download has started (used to dismiss loading overlay)
+    const token = req.query.pdfToken || '';
+    if (token) {
+      res.cookie('pdf_ready_' + token, '1', { maxAge: 30000, httpOnly: false });
+    }
+
     // Set response headers for PDF download (type - name)
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${type} - ${displayNameForFile}.pdf"`);
