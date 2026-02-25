@@ -1,7 +1,41 @@
 const { PrismaClient } = require('@prisma/client');
 
-// Single shared Prisma client instance
-const prisma = new PrismaClient();
+/**
+ * Helper to force optimal connection pooling parameters onto the DATABASE_URL.
+ * This ensures even if the Render dashboard env var is missing these, Prisma
+ * will still use them.
+ *
+ * connection_limit=20 : allows more parallel queries to queue up
+ * pool_timeout=0      : infinite timeout so queries wait patiently for Supabase
+ *                       to wake up from sleep instead of crashing at 60s.
+ */
+function getDatasourceUrl() {
+    let url = process.env.DATABASE_URL;
+    if (!url) return undefined;
+
+    try {
+        const parsedUrl = new URL(url);
+        parsedUrl.searchParams.set('connection_limit', '20');
+        parsedUrl.searchParams.set('pool_timeout', '0');
+        // If not already set, ensure pgbouncer is enabled (needed for Supabase pooling)
+        if (!parsedUrl.searchParams.has('pgbouncer')) {
+            parsedUrl.searchParams.set('pgbouncer', 'true');
+        }
+        return parsedUrl.toString();
+    } catch (e) {
+        console.warn('⚠️ Could not parse DATABASE_URL for query param injection');
+        return url;
+    }
+}
+
+// Single shared Prisma client instance configured with the optimized URL
+const prisma = new PrismaClient({
+    datasources: {
+        db: {
+            url: getDatasourceUrl(),
+        },
+    },
+});
 
 // Track whether we have an active DB connection
 let isConnected = false;
