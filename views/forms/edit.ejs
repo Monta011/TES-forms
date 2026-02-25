@@ -62,7 +62,7 @@
                       <div class="flex flex-col md:flex-row gap-3 mt-8 pt-6 border-t border-gray-200">
                         <button type="submit" name="action" value="save"
                           class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition">
-                          Save & Close
+                          Save &amp; Close
                         </button>
                         <button type="submit" name="action" value="export" id="export-pdf-btn"
                           class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition">
@@ -111,22 +111,17 @@
 
         document.getElementById('export-pdf-btn').addEventListener('click', function () {
           var form = this.closest('form');
-          // Add pdfToken to form action so the server can set the ready cookie
           var token = randomToken();
           var cookieName = 'pdf_ready_' + token;
           var action = form.action;
           form.action = action + (action.indexOf('?') === -1 ? '?' : '&') + 'pdfToken=' + token;
 
-          // Small delay so browser validation runs first
-          var btn = this;
           setTimeout(function () {
-            // Only show if the form actually submits (no validation errors)
             if (!form.checkValidity || form.checkValidity()) {
               var overlay = document.getElementById('pdf-loading-overlay');
               overlay.style.display = 'flex';
 
-              // Poll for the cookie the server sets when PDF is ready
-              var maxWait = 120; // 60 seconds
+              var maxWait = 120;
               var polls = 0;
               var interval = setInterval(function () {
                 polls++;
@@ -134,7 +129,6 @@
                   clearInterval(interval);
                   overlay.style.display = 'none';
                   document.cookie = cookieName + '=; Max-Age=0; path=/';
-                  // Restore original form action
                   form.action = action;
                 }
               }, 500);

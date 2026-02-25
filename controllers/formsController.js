@@ -1,4 +1,4 @@
-const { prisma } = require('../prismaClient');
+const { prisma, withRetry } = require('../prismaClient');
 const pdfService = require('../services/pdfService');
 
 // Valid form types
@@ -74,10 +74,10 @@ exports.list = async (req, res) => {
       type: dbType,
     };
 
-    const applications = await prisma.application.findMany({
+    const applications = await withRetry(() => prisma.application.findMany({
       where: whereClause,
       orderBy: { createdAt: 'desc' }
-    });
+    }));
 
     // PostgreSQL returns native JSON objects, no parsing needed
     let filteredApplications = applications;
@@ -157,9 +157,9 @@ exports.editForm = async (req, res) => {
     }
 
     const dbType = normalizeType(type);
-    const application = await prisma.application.findUnique({
+    const application = await withRetry(() => prisma.application.findUnique({
       where: { id }
-    });
+    }));
 
     if (!application || application.type !== dbType) {
       return res.status(404).render('404', { title: 'Application Not Found' });
@@ -217,12 +217,12 @@ exports.create = async (req, res) => {
     }
 
     // Create application
-    const application = await prisma.application.create({
+    const application = await withRetry(() => prisma.application.create({
       data: {
         type: dbType,
         data: validatedData
       }
-    });
+    }));
 
     // Check if user wants to export PDF immediately
     if (action === 'export') {
@@ -252,9 +252,9 @@ exports.update = async (req, res) => {
     const dbType = normalizeType(type);
 
     // Check if application exists
-    const existing = await prisma.application.findUnique({
+    const existing = await withRetry(() => prisma.application.findUnique({
       where: { id }
-    });
+    }));
 
     if (!existing || existing.type !== dbType) {
       return res.status(404).render('404', { title: 'Application Not Found' });
@@ -278,12 +278,12 @@ exports.update = async (req, res) => {
     }
 
     // Update application
-    await prisma.application.update({
+    await withRetry(() => prisma.application.update({
       where: { id },
       data: {
         data: validatedData
       }
-    });
+    }));
 
     // Check if user wants to export PDF immediately
     if (action === 'export') {
@@ -311,9 +311,9 @@ exports.exportPDF = async (req, res) => {
     }
 
     const dbType = normalizeType(type);
-    const application = await prisma.application.findUnique({
+    const application = await withRetry(() => prisma.application.findUnique({
       where: { id }
-    });
+    }));
 
     if (!application || application.type !== dbType) {
       return res.status(404).send('Application not found');
