@@ -111,29 +111,28 @@
 
         document.getElementById('export-pdf-btn').addEventListener('click', function () {
           var form = this.closest('form');
+
+          // Show overlay immediately before the form submits
+          var overlay = document.getElementById('pdf-loading-overlay');
+          overlay.style.display = 'flex';
+
           var token = randomToken();
           var cookieName = 'pdf_ready_' + token;
           var action = form.action;
           form.action = action + (action.indexOf('?') === -1 ? '?' : '&') + 'pdfToken=' + token;
 
-          setTimeout(function () {
-            if (!form.checkValidity || form.checkValidity()) {
-              var overlay = document.getElementById('pdf-loading-overlay');
-              overlay.style.display = 'flex';
-
-              var maxWait = 120;
-              var polls = 0;
-              var interval = setInterval(function () {
-                polls++;
-                if (getCookie(cookieName) || polls >= maxWait) {
-                  clearInterval(interval);
-                  overlay.style.display = 'none';
-                  document.cookie = cookieName + '=; Max-Age=0; path=/';
-                  form.action = action;
-                }
-              }, 500);
+          // Poll for the server cookie that confirms PDF is ready
+          var maxWait = 120;
+          var polls = 0;
+          var interval = setInterval(function () {
+            polls++;
+            if (getCookie(cookieName) || polls >= maxWait) {
+              clearInterval(interval);
+              overlay.style.display = 'none';
+              document.cookie = cookieName + '=; Max-Age=0; path=/';
+              form.action = action;
             }
-          }, 50);
+          }, 500);
         });
       </script>
 </body>
