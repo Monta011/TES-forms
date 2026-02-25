@@ -9,6 +9,10 @@ function getDatasourceUrl() {
     let url = process.env.DATABASE_URL;
     if (!url) return undefined;
 
+    // VERY IMPORTANT: Render adds/users paste literal quotes sometimes. 
+    // This breaks `new URL()` and bypasses all our injection logic.
+    url = url.replace(/^"|"$/g, '').replace(/^'|'$/g, '');
+
     try {
         const parsedUrl = new URL(url);
         parsedUrl.searchParams.set('connection_limit', '20');
@@ -20,7 +24,7 @@ function getDatasourceUrl() {
         }
         return parsedUrl.toString();
     } catch (e) {
-        console.warn('⚠️ Could not parse DATABASE_URL for query param injection');
+        console.warn('⚠️ Could not parse DATABASE_URL for query param injection:', e.message);
         return url;
     }
 }
