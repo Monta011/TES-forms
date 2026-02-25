@@ -1,7 +1,5 @@
-const { PrismaClient } = require('@prisma/client');
+const { prisma } = require('../prismaClient');
 const pdfService = require('../services/pdfService');
-
-const prisma = new PrismaClient();
 
 // Valid form types
 const VALID_TYPES = ['rejoining', 'leave-expats', 'leave-omani'];
@@ -26,18 +24,18 @@ const getDisplayName = (type) => {
 // Validate signature size (limit to 500KB base64)
 const validateSignature = (signature) => {
   if (!signature) return null;
-  
+
   // Check if it's a valid data URI
   if (!signature.startsWith('data:image/')) {
     return 'Invalid signature format';
   }
-  
+
   // Check size (base64 length ≈ file size * 1.33)
   const maxSize = 500 * 1024; // 500KB
   if (signature.length > maxSize) {
     return 'Signature file is too large (max 500KB)';
   }
-  
+
   return null;
 };
 
@@ -63,7 +61,7 @@ exports.home = (req, res) => {
 exports.list = async (req, res) => {
   try {
     const { type } = req.params;
-    
+
     if (!VALID_TYPES.includes(type)) {
       return res.status(404).render('404', { title: 'Form Type Not Found' });
     }
@@ -83,7 +81,7 @@ exports.list = async (req, res) => {
 
     // PostgreSQL returns native JSON objects, no parsing needed
     let filteredApplications = applications;
-    
+
     if (search) {
       filteredApplications = filteredApplications.filter(app => {
         const searchLower = search.toLowerCase();
@@ -98,7 +96,7 @@ exports.list = async (req, res) => {
 
     if (from) {
       const fromDate = new Date(from);
-      filteredApplications = filteredApplications.filter(app => 
+      filteredApplications = filteredApplications.filter(app =>
         new Date(app.createdAt) >= fromDate
       );
     }
@@ -106,7 +104,7 @@ exports.list = async (req, res) => {
     if (to) {
       const toDate = new Date(to);
       toDate.setHours(23, 59, 59, 999);
-      filteredApplications = filteredApplications.filter(app => 
+      filteredApplications = filteredApplications.filter(app =>
         new Date(app.createdAt) <= toDate
       );
     }
@@ -133,7 +131,7 @@ exports.list = async (req, res) => {
 // New application form
 exports.newForm = (req, res) => {
   const { type } = req.params;
-  
+
   if (!VALID_TYPES.includes(type)) {
     return res.status(404).render('404', { title: 'Form Type Not Found' });
   }
@@ -153,7 +151,7 @@ exports.newForm = (req, res) => {
 exports.editForm = async (req, res) => {
   try {
     const { type, id } = req.params;
-    
+
     if (!VALID_TYPES.includes(type)) {
       return res.status(404).render('404', { title: 'Form Type Not Found' });
     }
@@ -195,13 +193,13 @@ exports.editForm = async (req, res) => {
 exports.create = async (req, res) => {
   try {
     const { type } = req.params;
-    
+
     if (!VALID_TYPES.includes(type)) {
       return res.status(404).render('404', { title: 'Form Type Not Found' });
     }
 
     const dbType = normalizeType(type);
-    
+
     // Validate and sanitize form data
     const { action, ...formData } = req.body;
     const { errors, validatedData } = validateFormData(type, formData, { strict: action === 'export' });
@@ -246,7 +244,7 @@ exports.create = async (req, res) => {
 exports.update = async (req, res) => {
   try {
     const { type, id } = req.params;
-    
+
     if (!VALID_TYPES.includes(type)) {
       return res.status(404).render('404', { title: 'Form Type Not Found' });
     }
@@ -307,7 +305,7 @@ exports.update = async (req, res) => {
 exports.exportPDF = async (req, res) => {
   try {
     const { type, id } = req.params;
-    
+
     if (!VALID_TYPES.includes(type)) {
       return res.status(404).send('Form type not found');
     }
@@ -417,7 +415,7 @@ function validateFormData(type, formData, options = {}) {
     validatedData.managerSignatureDate = formData.managerSignatureDate || '';
     validatedData.hrSignature = processSignature(formData.hrSignature, 'hrSignature', errors);
     validatedData.hrSignatureDate = formData.hrSignatureDate || '';
-  } 
+  }
   else if (type === 'leave-expats') {
     // Required fields
     if (!formData.employeeName || formData.employeeName.trim() === '') {
@@ -466,7 +464,7 @@ function validateFormData(type, formData, options = {}) {
     validatedData.managerSignatureDate = formData.managerSignatureDate || '';
     validatedData.hrSignature = processSignature(formData.hrSignature, 'hrSignature', errors);
     validatedData.hrSignatureDate = formData.hrSignatureDate || '';
-  } 
+  }
   else if (type === 'leave-omani') {
     // Required fields
     if (!formData.employeeName || formData.employeeName.trim() === '') {
@@ -490,7 +488,7 @@ function validateFormData(type, formData, options = {}) {
     validatedData.commenceLeave = formData.commenceLeave || '';
     validatedData.totalDays = formData.totalDays ? parseInt(formData.totalDays) : 0;
     validatedData.lastDayLeave = formData.lastDayLeave || '';
-    
+
     if (strict) {
       if (!validatedData.formDate) errors.formDate = 'Form Date is required';
       if (!validatedData.position) errors.position = 'Position is required';

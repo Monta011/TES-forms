@@ -12,9 +12,7 @@
 const cron = require('node-cron');
 const http = require('http');
 const https = require('https');
-const { PrismaClient } = require('@prisma/client');
-
-const prisma = new PrismaClient();
+const { prisma } = require('./prismaClient');
 
 /**
  * Ping the app's own /health endpoint to prevent Render from sleeping.

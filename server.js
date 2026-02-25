@@ -86,15 +86,10 @@ app.listen(PORT, async () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
   console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
 
-  // Test database connection
-  try {
-    const { PrismaClient } = require('@prisma/client');
-    const prisma = new PrismaClient();
-    await prisma.$connect();
-    console.log('✅ Database connected successfully');
-    await prisma.$disconnect();
-  } catch (error) {
-    console.error('❌ Database connection failed:', error.message);
+  // Connect to database with retry logic (handles Supabase cold starts)
+  const { connectWithRetry } = require('./prismaClient');
+  const connected = await connectWithRetry();
+  if (!connected) {
     console.error('Check DATABASE_URL environment variable');
   }
 
