@@ -13,18 +13,25 @@
     "prisma:studio": "prisma studio",
     "render:install-puppeteer": "node scripts/install-puppeteer-render.js"
   },
-  "keywords": ["forms", "express", "ejs", "prisma", "pdf"],
+  "keywords": [
+    "forms",
+    "express",
+    "ejs",
+    "prisma",
+    "pdf"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@prisma/client": "^5.22.0",
+    "cookie-parser": "^1.4.6",
+    "csurf": "^1.11.0",
     "dotenv": "^16.4.5",
     "ejs": "^3.1.10",
     "express": "^4.19.2",
     "express-rate-limit": "^7.4.1",
-    "puppeteer": "^23.7.1",
-    "csurf": "^1.11.0",
-    "cookie-parser": "^1.4.6"
+    "node-cron": "^4.2.1",
+    "puppeteer": "^23.7.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.7",

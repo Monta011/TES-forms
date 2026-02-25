@@ -6,6 +6,7 @@ const csrf = require('csurf');
 const rateLimit = require('express-rate-limit');
 
 const formsRouter = require('./routes/forms');
+const { startKeepAlive } = require('./keep-alive');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -23,19 +24,13 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Keep-alive endpoint for cron job (placed before CSRF to allow automated pings)
-const { PrismaClient } = require('@prisma/client');
-const keepAlivePrisma = new PrismaClient();
-
-app.get('/api/health', async (req, res) => {
-  try {
-    // Lightweight query to keep Supabase active ("Two-Birds-With-One-Stone")
-    await keepAlivePrisma.$queryRawUnsafe('SELECT 1');
-    res.status(200).json({ status: 'ok', message: 'Render and Supabase are awake ☕' });
-  } catch (error) {
-    console.error('Health check failed:', error);
-    res.status(500).json({ status: 'error', message: 'Database ping failed' });
-  }
+// Health check endpoint — no CSRF needed, used for keep-alive pings
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    uptime: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString(),
+  });
 });
 
 // CSRF protection
@@ -90,7 +85,7 @@ app.use((err, req, res, next) => {
 app.listen(PORT, async () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
   console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
-  
+
   // Test database connection
   try {
     const { PrismaClient } = require('@prisma/client');
@@ -101,5 +96,11 @@ app.listen(PORT, async () => {
   } catch (error) {
     console.error('❌ Database connection failed:', error.message);
     console.error('Check DATABASE_URL environment variable');
+  }
+
+  // Start keep-alive scheduler in production to prevent
+  // Render from sleeping and Supabase from pausing
+  if (process.env.NODE_ENV === 'production') {
+    startKeepAlive(process.env.RENDER_APP_URL);
   }
 });

@@ -7,6 +7,7 @@ services:
     plan: free
     buildCommand: npm install && PUPPETEER_CACHE_DIR=/opt/render/project/.cache/puppeteer npx puppeteer browsers install chrome && npm run build && node scripts/init-database.js
     startCommand: npm start
+    healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production
@@ -16,3 +17,5 @@ services:
         sync: false # Set manually in Render dashboard (Supabase direct connection string)
       - key: PUPPETEER_CACHE_DIR
         value: /opt/render/project/.cache/puppeteer
+      - key: RENDER_APP_URL
+        value: https://tes-forms-336p.onrender.com

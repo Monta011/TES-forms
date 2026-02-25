@@ -1,0 +1,39 @@
+name: Keep Alive
+
+# Pings the Render app every 14 minutes to prevent it from sleeping.
+# This acts as a backup in case the server restarts and the internal
+# cron scheduler hasn't kicked in yet.
+#
+# SETUP REQUIRED:
+#   Go to your GitHub repo → Settings → Secrets and variables → Actions
+#   Add a new secret: RENDER_APP_URL = https://your-app-name.onrender.com
+
+on:
+  schedule:
+    # Runs at every 14th minute  (GitHub cron uses UTC)
+    - cron: '*/14 * * * *'
+  workflow_dispatch: # Allow manual trigger from GitHub UI
+
+jobs:
+  ping:
+    name: Ping Render App
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+
+    steps:
+      - name: Ping /health endpoint
+        run: |
+          APP_URL="${{ secrets.RENDER_APP_URL }}"
+          # Fallback to hardcoded URL if secret is not set
+          if [ -z "$APP_URL" ]; then
+            APP_URL="https://tes-forms-336p.onrender.com"
+          fi
+          echo "Pinging $APP_URL/health ..."
+          STATUS=$(curl -o /dev/null -s -w "%{http_code}" --max-time 30 "$APP_URL/health")
+          echo "Response status: $STATUS"
+          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
+            echo "✅ App is awake and healthy"
+          else
+            echo "⚠️  Unexpected status code: $STATUS"
+            exit 1
+          fi
